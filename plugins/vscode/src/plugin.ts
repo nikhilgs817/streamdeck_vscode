@@ -4,6 +4,11 @@ import { REGISTRY, globals } from "../../../shared/base.js";
 import { ps } from "../../../shared/ps.js";
 import { initDeck } from "./deck.js";
 import { ALL_KEYS } from "./keys.js";
+import { readFileSync } from "node:fs";
+import { PRESET_ICONS, setAppDesign } from "../../../shared/icons.js";
+
+setAppDesign(JSON.parse(readFileSync(new URL('../app-design.json',import.meta.url),'utf8')));
+for(const [kind,preset] of Object.entries(PRESET_ICONS))if(kind.startsWith('vsc-'))preset.style='app';
 
 streamDeck.logger.setLevel("info");
 const log = streamDeck.logger.createScope("plugin");

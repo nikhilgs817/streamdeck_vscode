@@ -18,3 +18,4 @@ tools/*
 !tools/common.mjs
 !tools/clean.mjs
 !tools/verify-app-control.ps1
+!tools/render-editor-preview.mjs

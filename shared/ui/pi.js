@@ -302,15 +302,25 @@
 
 	function build() {
 		const show = (id, on) => ($(id).hidden = !on);
+		show("styleApp", !!window.DailyOpsDesign);
 		const companion = window.DailyOpsCompanion;
 		const definition = companion?.commands?.find((c) => "comp-" + c.id === kind);
 		show("sec-companion", !!definition);
 		if (definition) {
+			const fixed = ["back", "focus", "url", "page"].includes(definition.operation);
 			$("companionTitle").textContent = companion.name;
 			$("companionDescription").textContent = definition.description;
-			$("companionShortcutRow").hidden = definition.id === "back" || definition.id === "focus";
-			$("companionShortcutHint").hidden = definition.id === "back" || definition.id === "focus";
-			$("companionShortcut").placeholder = definition.shortcut || "Use the built-in control";
+			$("companionSetup").hidden = !definition.setup;
+			$("companionSetup").textContent = definition.setup || "";
+			$("companionExecution").hidden = !definition.trading;
+			$("companionExecution").textContent = definition.executionNote || (definition.trading === "submit" ? (definition.holdMs ? "HOLD 1 SECOND · Release early to cancel. Uses the configured broker action once." : "IMMEDIATE ACTION · Uses the broker's configured hotkey and order defaults. Nothing is queued or repeated on hold.") : definition.trading === "bracket" ? "EDITABLE BRACKET · Opens setup only. Entry, target and stop are edited in the app." : "POSITIONS / TRADING PANEL");
+			$("companionShortcutRow").hidden = fixed;
+			$("companionShortcutHint").hidden = fixed;
+			$("companionDestinationRow").hidden = definition.operation !== "url";
+			$("companionDestination").placeholder = definition.url || "Enter your trading desk page URL";
+			$("companionDestination").addEventListener("change", () => { set("destination", $("companionDestination").value.trim()); save(); });
+			$("companionShortcut").placeholder = definition.trading === "submit" ? "Enter the matching broker hotkey" : definition.shortcut || "Use the built-in control";
+			if (definition.trading) $("companionShortcutHint").textContent = definition.trading === "submit" ? "Required: one configured trading hotkey, e.g. Ctrl+Alt+B or F8. Broker settings determine whether it submits. The trading app must already be in front." : "Optional app hotkey override. Bracket shortcuts must open an editor; panel shortcuts must open the named panel. One chord only.";
 			$("companionBack").hidden = definition.id !== "back";
 			$("companionFollowRow").hidden = definition.id !== "back";
 			$("companionFollow").addEventListener("change", () => { globalSettings.autoFollow = $("companionFollow").checked; if (ws && ws.readyState === 1) ws.send(JSON.stringify({event:"setGlobalSettings",context:piUuid,payload:globalSettings})); });
@@ -521,6 +531,7 @@
 		setVal("iconLabel", s.iconLabel);
 		setVal("shortcut", s.shortcut);
 		setVal("companionShortcut", s.shortcut);
+		setVal("companionDestination", s.destination);
 		setVal("command", s.command);
 		if (kind === "app") {
 			if (!credentialDirty) setVal("credentialUsername", s.credentialUsername);
@@ -605,6 +616,8 @@
 
 	function dynamicLabel() {
 		const s = settings;
+		const definition = window.DailyOpsCompanion?.commands?.find(c => "comp-" + c.id === kind);
+		if (definition && (((definition.trading === "submit" || definition.requiresBinding) && !s.shortcut?.trim()) || (definition.operation === "url" && !definition.url && !s.destination?.trim()))) return definition.name + " · SETUP";
 		if (APP_KINDS.includes(kind)) {
 			if (s.appName) return s.appName;
 			if (kind === "app" && s.target) return s.target.trim().split(/[\\/]/).pop().replace(/\.(exe|lnk|bat|cmd)$/i, "");
@@ -629,7 +642,7 @@
 
 	function currentStyle() {
 		const st = settings.iconStyle;
-		if (st === "real" || st === "neon" || st === "vivid" || st === "pro") return st === "real" && !REAL_CAPABLE.includes(kind) ? "neon" : st;
+		if (st === "app" || st === "real" || st === "neon" || st === "vivid" || st === "pro") return st === "real" && !REAL_CAPABLE.includes(kind) ? "neon" : st;
 		return I().PRESET_ICONS[kind]?.style || (["app", "website"].includes(kind) ? "real" : kind.indexOf("vsc-") === 0 ? "pro" : "neon");
 	}
 
@@ -653,6 +666,9 @@
 		const hint = $("styleHint");
 		hint.className = "hint";
 		hint.textContent = "";
+		if (look.style === "app") hint.textContent = "Uses " + window.DailyOpsDesign.name + " colours. Choose Colourful, Vivid or Pro to use a custom colour.";
+		$("themes").hidden = look.style === "app";
+		$("themes").previousElementSibling.hidden = look.style === "app";
 		$("refreshIcon").hidden = usingImage || look.style !== "real";
 		if (settings.animate !== false && !motionTimer) motionTimer = setInterval(() => {
 			if (!document.hidden) drawPreview();

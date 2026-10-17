@@ -58,7 +58,7 @@ export type AnySettings = AppSettings & FolderSettings & WebsiteSettings & Volum
 /** manifest UUID → action instance (used for settings-panel requests). */
 export const REGISTRY = new Map<string, DailyAction<AnySettings>>();
 
-type Look = { glyph: string; theme: string; label: string; style: "real" | "neon" | "vivid" | "pro" };
+type Look = { glyph: string; theme: string; label: string; style: "real" | "neon" | "vivid" | "pro" | "app" };
 
 export abstract class DailyAction<T extends AnySettings> extends SingletonAction<T> {
 	/** Key into PRESET_ICONS — also the UUID suffix. */
@@ -110,7 +110,7 @@ export abstract class DailyAction<T extends AnySettings> extends SingletonAction
 
 	look(s: T): Look {
 		const preset = PRESET_ICONS[this.kind] ?? PRESET_ICONS.app;
-		const style = (["real", "neon", "vivid", "pro"].includes(s.iconStyle ?? "") ? s.iconStyle : preset.style || (REAL_ICON_KINDS.includes(this.kind) ? "real" : this.kind.startsWith("vsc-") ? "pro" : "neon")) as Look["style"];
+		const style = (["real", "neon", "vivid", "pro", "app"].includes(s.iconStyle ?? "") ? s.iconStyle : preset.style || (REAL_ICON_KINDS.includes(this.kind) ? "real" : this.kind.startsWith("vsc-") ? "pro" : "neon")) as Look["style"];
 		const label = s.hideLabel ? "" : s.iconLabel?.trim() || this.dynamicLabel(s) || preset.label;
 		return { glyph: s.iconGlyph || preset.glyph, theme: s.iconTheme || preset.theme, label, style };
 	}

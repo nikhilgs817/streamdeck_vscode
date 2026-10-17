@@ -1,0 +1,10 @@
+{
+  "id": "vscode",
+  "name": "VS Code",
+  "background": "#181818",
+  "surface": "#202020",
+  "ink": "#d9e8f4",
+  "accent": "#3baff0",
+  "border": "#3a3d41",
+  "radius": 3
+}

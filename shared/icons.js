@@ -2,6 +2,8 @@
 // inspector (icon picker) and the build script (static manifest images).
 // All artwork is original, generic glyphs (no brand logos).
 
+import { APP_DESIGN, setAppDesign, appKeySvg } from './app-design.js';
+export { setAppDesign };
 const W = "#fff";
 
 /** Colour themes: [gradient start, gradient end, ink (cut-out colour)] */
@@ -72,6 +74,10 @@ const folderShape = `<path d="M24 40a8 8 0 0 1 8-8h22a6 6 0 0 1 4.6 2.2L65 41h47
 
 /** Glyphs, drawn in a 144×144 box (glyph area ≈ y 16–106). `ink` is the cut-out colour. */
 export const GLYPHS = {
+	tradebuy: (ink) => `<rect x="25" y="28" width="94" height="67" rx="12" fill="${W}" fill-opacity=".18" stroke="${W}" stroke-width="3"/><path d="M40 78l23-22 16 11 25-30M88 37h16v16" ${stroke(W,8)}/><circle cx="43" cy="35" r="7" fill="${W}"/><path d="M43 31v8M39 35h8" ${stroke(ink,2)}/>` ,
+	tradesell: (ink) => `<rect x="25" y="28" width="94" height="67" rx="12" fill="${W}" fill-opacity=".18" stroke="${W}" stroke-width="3"/><path d="M40 41l23 22 16-11 25 30M88 82h16V66" ${stroke(W,8)}/><circle cx="43" cy="91" r="7" fill="${W}"/><path d="M39 91h8" ${stroke(ink,2)}/>` ,
+	tradebracket: (ink) => `<rect x="48" y="19" width="48" height="25" rx="7" fill="${W}"/><path d="M72 44v17M38 76V61h68v15" ${stroke(W,5)}/><rect x="18" y="76" width="48" height="27" rx="7" fill="${W}"/><rect x="78" y="76" width="48" height="27" rx="7" fill="${W}"/><path d="M32 91l10-9 10 9M92 84l10 9 10-9" ${stroke(ink,4)}/><path d="M65 32h14" ${stroke(ink,4)}/>` ,
+	tradeorders: (ink) => `<rect x="29" y="23" width="86" height="79" rx="11" fill="${W}"/><path d="M48 43h43M48 62h29M48 81h18" ${stroke(ink,6)}/><path d="M90 73l8 7-8 7M98 80H79" ${stroke(ink,4)}/>` ,
 	folder: () => folderShape,
 	websitefolder: (ink) => websiteFolderGlyph(ink, 6),
 	download: (ink) => folderShape + `<path d="M72 58v28M60 74l12 12 12-12" ${stroke(ink, 8)}/>`,
@@ -308,6 +314,7 @@ export const GLYPHS = {
 
 /** Glyphs offered in the icon picker (in display order). */
 export const PICKABLE = [
+	"tradebuy", "tradesell", "tradebracket", "tradeorders",
 	"rocket", "grid", "folder", "download", "globe", "play", "sparkchat", "chats", "code", "terminal",
 	"candles", "chart", "waves", "dollar", "briefcase", "mail", "calendar", "doc", "cloud", "music",
 	"gamepad", "camera", "gear", "home", "star", "heart", "bolt", "link",
@@ -353,12 +360,13 @@ function movingGlyph(glyph, art, ink, phase, breathe) {
 
 /**
  * Builds a 144×144 key image. No SVG filters are used, so it renders the same in Stream Deck's SVG engine.
- * @param {{glyph: string, theme: string, label?: string, style?: "neon"|"vivid"|"real"|"pro", image?: string, motion?: {kind: string, phase: number}}} spec
+ * @param {{glyph: string, theme: string, label?: string, style?: "neon"|"vivid"|"real"|"pro"|"app", image?: string, motion?: {kind: string, phase: number}}} spec
  *   style "vivid": white glyph on a colour gradient · "neon": colour-gradient glyph on dark glass ·
  *   "real": the app's/site's own icon (data URI in `image`) on dark glass.
  * @returns {string} SVG markup
  */
 export function keySvg({ glyph, theme, label = "", style = "neon", image, motion }) {
+	if(style === 'app') return appKeySvg({glyph,theme,label,motion},GLYPHS[glyph]||GLYPHS.rocket);
 	let [c1, c2, ink] = THEMES[theme] ?? THEMES.violet;
 	if (style !== "vivid" && NEON_OVERRIDE[theme]) [c1, c2] = NEON_OVERRIDE[theme];
 	const u = "k" + (++uid).toString(36); // unique ids so many icons can share one HTML page
@@ -508,7 +516,7 @@ export function svgDataUri(svg) {
 /** @type {string[]} */
 export const REAL_ICON_KINDS = ["app", "website"];
 
-/** @type {Record<string, {glyph: string, theme: string, label: string, style?: "neon"|"vivid"|"real"|"pro"}>} */
+/** @type {Record<string, {glyph: string, theme: string, label: string, style?: "neon"|"vivid"|"real"|"pro"|"app"}>} */
 export const PRESET_ICONS = {
 	downloads: { glyph: "folder", theme: "gold", label: "Folders" },
 	folder: { glyph: "folder", theme: "fuchsia", label: "Folder" },

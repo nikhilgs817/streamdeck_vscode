@@ -260,6 +260,9 @@
 	<section id="sec-companion" hidden>
 		<h2 id="companionTitle">App control</h2>
 		<div id="companionDescription" class="hint pad"></div>
+		<div id="companionExecution" class="hint pad" hidden></div>
+		<div id="companionSetup" class="hint pad" hidden></div>
+		<div class="row" id="companionDestinationRow" hidden><label for="companionDestination">Page URL</label><input id="companionDestination" class="grow" placeholder="https://" /></div>
 		<div class="row" id="companionShortcutRow"><label for="companionShortcut">Shortcut</label><input id="companionShortcut" class="grow" placeholder="Use the built-in control" /></div>
 		<div id="companionShortcutHint" class="hint pad">Optional override, for example Ctrl+Shift+N. Match the shortcut configured in your app.</div>
 		<div class="row" id="companionFollowRow" hidden><label for="companionFollow">Follow focus</label><div class="grow"><input id="companionFollow" type="checkbox" checked /> <span class="hint">Automatically show these keys when this app is in front. Requires Windows Daily Toolkit 2.6 or later.</span></div></div>
@@ -316,6 +319,7 @@
 					<label>Style</label>
 					<div class="grow">
 						<div class="seg" id="styleSeg">
+							<button data-style="app" id="styleApp" hidden>App theme</button>
 							<button data-style="real" id="styleReal">App icon</button>
 							<button data-style="pro" id="stylePro">Pro</button>
 							<button data-style="neon">Colourful</button>

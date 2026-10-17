@@ -86,8 +86,7 @@ try {
 	await sleep(350);
 	for (const id of LAYOUT) {
 		const frames = sent.filter((m) => m.event === "setImage" && m.context === `c-${id}`).slice(-3).map((m) => decodeURIComponent(m.payload.image));
-		const offsets = frames.map((svg) => /stroke-dashoffset="([^"]+)"/.exec(svg)?.[1]);
-		check(`${id}: Pro artwork animates while visible`, offsets.length >= 2 && offsets.every(Boolean) && new Set(offsets).size >= 2);
+		check(`${id}: app-themed artwork animates while visible`, frames.length >= 2 && frames.every(svg => svg.includes('data-app-design="vscode"')) && new Set(frames).size >= 2);
 	}
 
 	// 2) Keys send the right things to VS Code

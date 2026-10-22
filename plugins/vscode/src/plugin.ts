@@ -4,7 +4,7 @@ import { REGISTRY, globals } from "../../../shared/base.js";
 import { ps } from "../../../shared/ps.js";
 import { initDeck } from "./deck.js";
 import { ALL_KEYS } from "./keys.js";
-import { readFileSync } from "node:fs";
+import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { PRESET_ICONS, setAppDesign } from "../../../shared/icons.js";
 
 setAppDesign(JSON.parse(readFileSync(new URL('../app-design.json',import.meta.url),'utf8')));
@@ -51,3 +51,9 @@ try {
 } catch (e) {
 	log.warn(`global settings: ${(e as Error).message}`);
 }
+
+// A fresh receipt lets the installer verify this connected SDK process without reading settings.
+try {
+    mkdirSync(new URL("../logs/", import.meta.url), { recursive: true });
+    writeFileSync(new URL("../logs/installer-ready.json", import.meta.url), JSON.stringify({ pid: process.pid, readyAt: new Date().toISOString() }), "utf8");
+} catch { log.warn("Installer startup receipt could not be written"); }

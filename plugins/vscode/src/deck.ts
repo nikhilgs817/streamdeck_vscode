@@ -54,6 +54,11 @@ async function localBack(deviceId?: string): Promise<void> {
 	}
 }
 
+/** Shows page `page` (0 = first) of the VS Code keys on one device. */
+export async function showPage(deviceId: string, page: number): Promise<void> {
+	await streamDeck.profiles.switchToProfile(deviceId, PROFILE, page);
+	switched.add(deviceId);
+}
 export async function showKeys(deviceId?: string): Promise<void> {
 	if (bridge?.connected) await bridge.request("show", deviceId); else await localShow(deviceId);
 }

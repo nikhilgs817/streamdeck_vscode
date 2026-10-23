@@ -2,7 +2,7 @@ import { action, type Action, type KeyDownEvent } from "@elgato/streamdeck";
 import { DailyAction, LaunchAction, log, type Appearance, type FolderSettings } from "../../../shared/base.js";
 import { ps, type PsResult } from "../../../shared/ps.js";
 import type { IconSource } from "../../../shared/realicon.js";
-import { PROCESSES, backToMain, showKeys } from "./deck.js";
+import { PROCESSES, backToMain, showKeys, showPage } from "./deck.js";
 
 /** One step sent to VS Code: k = SendKeys keys, t = literal text, w = wait (ms). */
 export type Step = { k?: string; t?: string; w?: number };
@@ -36,6 +36,10 @@ export const COMMANDS: Record<string, { name: string; tip: string; steps: Step[]
 	problems: { name: "Problems", tip: "Ctrl+Shift+M", steps: [{ k: "^+m" }] },
 	zen: { name: "Zen Mode", tip: "View: Toggle Zen Mode", steps: palette("View: Toggle Zen Mode") },
 	close: { name: "Close Editor", tip: "Ctrl+W", steps: [{ k: "^w" }] },
+	copilot: { name: "Copilot Chat", tip: "Open the chat view (Ctrl+Alt+I)", steps: [{ k: "^%i" }] },
+	quickfix: { name: "Quick Fix", tip: "Quick fixes and refactorings (Ctrl+.)", steps: [{ k: "^." }] },
+	panel: { name: "Toggle Panel", tip: "Show or hide the bottom panel (Ctrl+J)", steps: [{ k: "^j" }] },
+	extensions: { name: "Extensions", tip: "Ctrl+Shift+X", steps: [{ k: "^+x" }] },
 };
 
 const NAMED: Record<string, string> = {
@@ -136,6 +140,24 @@ export class BackKey extends DailyAction<Appearance> {
 @action({ UUID: "com.dailyops.vscode.v2.zen" }) export class ZenKey extends CommandKey { protected readonly kind = "vsc-zen"; protected readonly id = "zen"; }
 @action({ UUID: "com.dailyops.vscode.v2.close" }) export class CloseKey extends CommandKey { protected readonly kind = "vsc-close"; protected readonly id = "close"; }
 
+@action({ UUID: "com.dailyops.vscode.v2.copilot" }) export class CopilotKey extends CommandKey { protected readonly kind = "vsc-copilot"; protected readonly id = "copilot"; }
+@action({ UUID: "com.dailyops.vscode.v2.quickfix" }) export class QuickFixKey extends CommandKey { protected readonly kind = "vsc-quickfix"; protected readonly id = "quickfix"; }
+@action({ UUID: "com.dailyops.vscode.v2.panel" }) export class PanelKey extends CommandKey { protected readonly kind = "vsc-panel"; protected readonly id = "panel"; }
+@action({ UUID: "com.dailyops.vscode.v2.extensions" }) export class ExtensionsKey extends CommandKey { protected readonly kind = "vsc-extensions"; protected readonly id = "extensions"; }
+
+// ---- Page keys (More / Main) -------------------------------------------------------------------
+
+@action({ UUID: "com.dailyops.vscode.v2.more" })
+export class MoreKey extends DailyAction<Appearance> {
+	protected readonly kind = "vsc-more";
+	override async onKeyDown(ev: KeyDownEvent<Appearance>): Promise<void> { await showPage(ev.action.device.id, 1); }
+}
+@action({ UUID: "com.dailyops.vscode.v2.main" })
+export class MainKey extends DailyAction<Appearance> {
+	protected readonly kind = "vsc-main";
+	override async onKeyDown(ev: KeyDownEvent<Appearance>): Promise<void> { await showPage(ev.action.device.id, 0); }
+}
+
 // ---- Custom keys -------------------------------------------------------------------------------
 
 /** Any VS Code keyboard shortcut, typed like "Ctrl+Shift+P" or "Ctrl+K Ctrl+S". */
@@ -174,6 +196,13 @@ const CODE_EXE = [
 	"%LOCALAPPDATA%\\Programs\\Microsoft VS Code Insiders\\Code - Insiders.exe",
 ];
 
+/** Cleans a folder path for the Code.exe command line: no quotes or shell metacharacters, no trailing slash (a trailing "\\" would escape the closing quote). */
+export function projectFolder(raw: string | undefined): string | undefined {
+	const folder = raw?.trim().replace(/^"(.*)"$/, "$1").replace(/[\\/]+$/, "");
+	if (!folder || /["&|<>^%\r\n]/.test(folder.replace(/%[A-Za-z_][A-Za-z0-9_]*%/g, ""))) return undefined;
+	return /^[A-Za-z]:$/.test(folder) ? folder + "\\" + "." : folder;
+}
+
 /** Opens a project folder in VS Code (tap / double-tap / hold = monitor 1 / 2 / 3) and shows the VS Code keys. */
 @action({ UUID: "com.dailyops.vscode.v2.project" })
 export class ProjectKey extends LaunchAction<FolderSettings> {
@@ -187,14 +216,14 @@ export class ProjectKey extends LaunchAction<FolderSettings> {
 		return p ? p.split(/[\\/]/).pop() : undefined;
 	}
 	protected async launch(s: FolderSettings): Promise<PsResult> {
-		const folder = s.folderPath?.trim().replace(/^"(.*)"$/, "$1");
-		if (!folder) return { status: "miss", message: "No project folder set — open this key's settings." };
-		let r: PsResult = { status: "miss", message: "VS Code not found" };
+		const folder = projectFolder(s.folderPath);
+		if (!folder) return { status: "miss", message: s.folderPath?.trim() ? "That folder path has characters VS Code links can't use (quotes or & | < > ^)." : "No project folder set — open this key's settings." };
+		let r: PsResult = { status: "miss", message: "VS Code not found in its usual folders. Install it for the current user or system-wide." };
+		// Code.exe is started directly with one quoted argument; there is no cmd.exe fallback, so the path can't run commands.
 		for (const exe of CODE_EXE) {
 			r = await ps.run("path", [exe, `"${folder}"`]);
 			if (r.status !== "miss") break;
 		}
-		if (r.status === "miss") r = await ps.run("cmd", ["code", `"${folder}"`]);
 		return r;
 	}
 	protected override async afterLaunch(action: Action<FolderSettings>): Promise<void> {
@@ -205,6 +234,6 @@ export class ProjectKey extends LaunchAction<FolderSettings> {
 export const ALL_KEYS = [
 	BackKey, PaletteKey, QuickOpenKey, SearchKey, TerminalKey, ExplorerKey, ScmKey, CommitKey, PushKey, PullKey, NewTermKey,
 	RunKey, DebugKey, StopKey, FormatKey, SaveAllKey, SidebarKey, SplitKey, CommentKey, DefinitionKey, RenameKey, ProblemsKey,
-	ZenKey, CloseKey, ShortcutKey, CommandPaletteKey, ProjectKey,
+	ZenKey, CloseKey, ShortcutKey, CommandPaletteKey, ProjectKey, CopilotKey, QuickFixKey, PanelKey, ExtensionsKey, MoreKey, MainKey,
 ];
 void log;

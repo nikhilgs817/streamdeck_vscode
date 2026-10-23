@@ -125,6 +125,8 @@ function Ensure-StreamDeck([string]$ExplicitPath, [version]$Minimum, [switch]$Re
     if ($ReadOnly) { throw ('Stream Deck ' + $Minimum + ' or later is required. Install it from https://www.elgato.com/downloads and run this installer again.') }
     $winget = Get-Command winget.exe -ErrorAction SilentlyContinue
     if (-not $winget) { throw 'Install or update Stream Deck from https://www.elgato.com/downloads, then double-click this installer again. Windows Package Manager is not available on this PC.' }
+    $answer = if ([Environment]::UserInteractive) { Read-Host ('Stream Deck ' + $Minimum + ' or later is needed. Install or update it now from the official Windows Package Manager source? (Y/N)') } else { 'N' }
+    if ($answer -notmatch '^(?i:y|yes)$') { throw ('Stream Deck ' + $Minimum + ' or later is required. Install it from https://www.elgato.com/downloads and run this installer again.') }
     Write-Step 'Installing or updating the official Elgato Stream Deck software. Windows may request administrator approval.'
     & $winget.Source install --id Elgato.StreamDeck --exact --source winget --silent --accept-package-agreements --accept-source-agreements --disable-interactivity
     if ($LASTEXITCODE -ne 0) { throw 'Stream Deck setup did not finish. Install it from https://www.elgato.com/downloads, then run this installer again.' }
@@ -136,7 +138,8 @@ function Stop-DeckForInstall([string]$PluginsRoot) {
     foreach ($process in @(Get-Process -Name StreamDeck -ErrorAction SilentlyContinue)) { $null = $process.CloseMainWindow() }
     Start-Sleep -Milliseconds 1200
     Get-Process -Name StreamDeck -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction Stop
-    foreach ($process in @(Get-CimInstance Win32_Process)) {
+    $all = @(); try { $all = @(Get-CimInstance Win32_Process -ErrorAction Stop) } catch { $all = @() } # WMI can be restricted on managed PCs
+    foreach ($process in $all) {
         if ($process.CommandLine -and $process.CommandLine.IndexOf($PluginsRoot, [StringComparison]::OrdinalIgnoreCase) -ge 0 -and $process.CommandLine.Contains('-pluginUUID')) { Stop-Process -Id $process.ProcessId -Force -ErrorAction SilentlyContinue }
     }
 }
@@ -144,11 +147,16 @@ function Start-DeckAfterInstall([string]$ExePath) { $null = Start-Process -FileP
 function Test-ReadyRecord($Record, [int]$ProcessId, [DateTimeOffset]$StartedAfter) {
     try { return ((Get-Field $Record 'pid') -eq $ProcessId -and [DateTimeOffset]::Parse((Get-Field $Record 'readyAt')) -ge $StartedAfter) } catch { return $false }
 }
-function Wait-ToolkitRuntime([string]$InstalledRoot, [int]$Seconds = 25, [DateTimeOffset]$StartedAfter = [DateTimeOffset]::UtcNow.AddMinutes(-1)) {
+function Wait-ToolkitRuntime([string]$InstalledRoot, [int]$Seconds = 60, [DateTimeOffset]$StartedAfter = [DateTimeOffset]::UtcNow.AddMinutes(-1)) {
     $until = [DateTime]::UtcNow.AddSeconds($Seconds)
     do {
-        $running = @(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -and $_.CommandLine.IndexOf($InstalledRoot, [StringComparison]::OrdinalIgnoreCase) -ge 0 -and $_.CommandLine.Contains('-pluginUUID') })
+        $wmiOk = $true; $procs = @(); try { $procs = @(Get-CimInstance Win32_Process -ErrorAction Stop) } catch { $wmiOk = $false }
+        $running = @($procs | Where-Object { $_.CommandLine -and $_.CommandLine.IndexOf($InstalledRoot, [StringComparison]::OrdinalIgnoreCase) -ge 0 -and $_.CommandLine.Contains('-pluginUUID') })
         $receipt = Join-Path $InstalledRoot 'logs\installer-ready.json'
+        if (-not $wmiOk -and (Test-Path -LiteralPath $receipt)) {
+            # WMI is blocked: fall back to the live process recorded in the fresh receipt.
+            try { $r = Read-Json $receipt; if (Get-Process -Id ([int](Get-Field $r 'pid')) -ErrorAction Stop) { $running = @([pscustomobject]@{ ProcessId = [int](Get-Field $r 'pid') }) } } catch { }
+        }
         if ($running.Count -and (Test-Path -LiteralPath $receipt)) {
             try { if (Test-ReadyRecord (Read-Json $receipt) $running[0].ProcessId $StartedAfter) { return } } catch { }
         }
@@ -252,12 +260,15 @@ function Install-ToolkitPayload([string]$PayloadRoot, [string]$DataRoot, [string
     } catch {
         $failure = $_
         # Stop only the app/runtime before restoring the files it had before this attempt.
-        Stop-DeckForInstall $pluginsRoot
-        if ($swapped) { Remove-InstallFolder $installed $pluginsRoot }
-        if (Test-Path -LiteralPath $previous) { Move-Item -LiteralPath $previous -Destination $installed }
-        foreach ($profile in $created) { Remove-InstallFolder $profile $profilesRoot }
-        Write-Json (Join-Path $backup 'installation.json') ([ordered]@{ Version = $manifest.Version; Status = 'RolledBack'; HadPreviousPlugin = $hadPlugin })
-        & $Restart
+        # Every rollback step runs on its own, so one failure cannot skip the others or leave Stream Deck closed.
+        $rollbackIssues = @()
+        try { Stop-DeckForInstall $pluginsRoot } catch { $rollbackIssues += 'stop: ' + $_.Exception.Message }
+        if ($swapped) { try { Remove-InstallFolder $installed $pluginsRoot } catch { $rollbackIssues += 'remove: ' + $_.Exception.Message } }
+        if (Test-Path -LiteralPath $previous) { try { Move-Item -LiteralPath $previous -Destination $installed } catch { $rollbackIssues += 'restore: ' + $_.Exception.Message } }
+        foreach ($profile in $created) { try { Remove-InstallFolder $profile $profilesRoot } catch { $rollbackIssues += 'profile: ' + $_.Exception.Message } }
+        try { Write-Json (Join-Path $backup 'installation.json') ([ordered]@{ Version = $manifest.Version; Status = 'RolledBack'; HadPreviousPlugin = $hadPlugin; Issues = @($rollbackIssues) }) } catch { }
+        try { & $Restart } catch { $rollbackIssues += 'restart: ' + $_.Exception.Message }
+        if ($rollbackIssues.Count) { Write-Host ('Rollback notes (your backup is in ' + $backup + '): ' + ($rollbackIssues -join '; ')) }
         throw ('Installation was rolled back. Your previous plugin and layouts were kept. ' + $failure.Exception.Message)
     } finally { try { Remove-InstallFolder $candidate $pluginsRoot } catch { Write-Host 'Temporary setup files were retained for cleanup later.' } }
 }
@@ -315,6 +326,9 @@ try {
         Invoke-WebRequest -Uri ($script:ReleaseBase + '/installer-manifest.json') -OutFile $metadataPath -UseBasicParsing
     }
     $metadata = Read-Json $metadataPath
+    # The package hash is pinned in plugin.json at release time, so a downloaded manifest cannot vouch for itself.
+    $pinned = $null; try { $pinned = $script:Installer.PackageSha256 } catch { }
+    if ($pinned -and $metadata.Sha256 -ne $pinned) { throw 'The installation manifest does not match this installer. Download a fresh installer ZIP.' }
     if ($metadata.PluginId -ne $script:PluginId -or $metadata.Version -ne $script:ReleaseVersion -or $metadata.File -ne ($script:PluginId + '.streamDeckPlugin') -or $metadata.Sha256 -notmatch '^[a-fA-F0-9]{64}$') { throw 'The installation manifest is invalid or belongs to another version.' }
     if (-not $PackagePath) {
         foreach ($candidate in @((Join-Path $bundleRoot $metadata.File), (Join-Path $bundleRoot ('dist\' + $metadata.File)))) { if (Test-Path -LiteralPath $candidate -PathType Leaf) { $PackagePath = $candidate; break } }

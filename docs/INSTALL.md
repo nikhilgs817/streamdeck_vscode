@@ -2,13 +2,13 @@
 
 ## Recommended: double-click installer
 
-1. Download **VSCodeControls-Installer-2.4.1.0.zip** from [GitHub Releases](https://github.com/nikhilgs817/streamdeck_vscode/releases/latest).
+1. Download **VSCodeControls-Installer-2.5.0.0.zip** from [GitHub Releases](https://github.com/nikhilgs817/streamdeck_vscode/releases/latest).
 2. Right-click the ZIP and choose **Extract All**. Open the extracted **VSCodeControls-Installer** folder.
 3. Double-click **Install-VSCodeControls.cmd**. Keep the other files in that folder.
-4. Wait for **Installed VS Code Controls 2.4.1.0**. Stream Deck closes briefly and opens again automatically.
+4. Wait for **Installed VS Code Controls 2.5.0.0**. Stream Deck closes briefly and opens again automatically.
 5. In Stream Deck, find **VS Code Controls** in the action list. On a compatible 15-key deck, you can also choose **VS Code** from the profile dropdown for its ready-made app layout.
 
-No Git, Node.js, npm, developer mode or build commands are needed. Run the installer as your normal Windows user. If Stream Deck is missing or too old, the script can install/update the official **Elgato.StreamDeck** package through Windows Package Manager; Windows may request administrator approval for that prerequisite. If Windows Package Manager is unavailable, install Stream Deck from [Elgato Downloads](https://www.elgato.com/downloads), then run this installer again.
+No Git, Node.js, npm, developer mode or build commands are needed. Run the installer as your normal Windows user. If Stream Deck is missing or too old, the script asks first, then can install/update the official **Elgato.StreamDeck** package through Windows Package Manager; Windows may request administrator approval for that prerequisite. If Windows Package Manager is unavailable, install Stream Deck from [Elgato Downloads](https://www.elgato.com/downloads), then run this installer again.
 
 The extracted bundle includes Windows Daily Toolkit 2.6.1 for automatic app-profile switching. It installs that dependency only if missing or older; a newer version is kept. Both plugins can install offline when a compatible Stream Deck app is already installed. A separately installed Toolkit remains available if the companion later needs rollback. The launcher in a downloaded source checkout also works: it retrieves the matching prebuilt release rather than building the plugin.
 

@@ -111,6 +111,8 @@ class PowerShellHost {
 			const timer = setTimeout(() => {
 				this.#pending.delete(id);
 				resolve({ status: "err", message: `Timed out: ${command}` });
+				// A stuck host would block every later key: restart it.
+				try { this.#proc?.kill(); } catch { /* already gone */ }
 			}, timeoutMs);
 			this.#pending.set(id, { resolve, timer, line });
 			try {
@@ -136,6 +138,7 @@ class PowerShellHost {
 			}
 			const p = this.#pending.get(id);
 			if (!p) continue;
+			this.#restarts = 0; // a healthy reply resets the crash budget
 			clearTimeout(p.timer);
 			this.#pending.delete(id);
 			p.resolve({ status: (status as PsStatus) ?? "err", message: unb64(msg) });
@@ -181,7 +184,8 @@ function dryRun(command: string, args: string[]): PsResult {
 		case "start":
 			return /missing-app/i.test(args[0] ?? "") ? { status: "miss", message: "Not in Start menu" } : { status: "ok", message: args[0] };
 		case "path":
-			return { status: "miss", message: `Not found: ${args[0]}` };
+			// The simulated PC has a per-user VS Code install; any other program is "not found".
+			return /\\Microsoft VS Code\\Code\.exe$/i.test(args[0] ?? "") ? { status: "ok", message: args[0] ?? "" } : { status: "miss", message: `Not found: ${args[0]}` };
 		case "resolve":
 			return /missing-app/i.test(args[0] ?? "") ? { status: "miss", message: "not found" } : { status: "ok", message: "Dry.App!" + (args[0] ?? "").split("|")[0] };
 		case "icon":

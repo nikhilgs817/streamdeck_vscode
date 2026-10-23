@@ -2,8 +2,15 @@
 // inspector (icon picker) and the build script (static manifest images).
 // All artwork is original, generic glyphs (no brand logos).
 
-import { APP_DESIGN, setAppDesign, appKeySvg } from './app-design.js';
-export { setAppDesign };
+import { APP_DESIGN, setAppDesign as setDesign, appKeySvg } from './app-design.js';
+import { brandKeySvg, brandMonoSvg, hasArt, ART, BRANDS } from './brands/brand-keys.js';
+/** Selects the companion's native design. Claude also gets its own animated icon set in the picker. */
+export function setAppDesign(design) {
+	setDesign(design);
+	if (design && BRANDS[design.id]) for (const g of Object.keys(ART).reverse()) if (!PICKABLE.includes(g)) PICKABLE.unshift(g);
+}
+const BRAND_STYLES = ['app', 'light', 'neon', 'vivid', 'pro'];
+const brandOf = () => (APP_DESIGN && BRANDS[APP_DESIGN.id] ? APP_DESIGN.id : null);
 const W = "#fff";
 
 /** Colour themes: [gradient start, gradient end, ink (cut-out colour)] */
@@ -39,6 +46,10 @@ export const THEMES = {
 	cosmic: ["#713CFF", "#F02CBA", "#42126B"],
 	peach: ["#FF9270", "#FF497C", "#8C2545"],
 	lemonade: ["#D5E900", "#36B65E", "#3C5A05"],
+	// Brand colours (defaults for the app keys in Colourful, Vivid and Pro).
+	clay: ["#F0A07C", "#C8582F", "#5C2414"],
+	chatgpt: ["#2BD69A", "#0E8A65", "#053A2B"],
+	vscode: ["#4DA3FF", "#0B5CAD", "#06315E"],
 };
 
 /** Brighter glyph colours for themes that are too dark to read on the dark "neon" tile. */
@@ -360,12 +371,17 @@ function movingGlyph(glyph, art, ink, phase, breathe) {
 
 /**
  * Builds a 144×144 key image. No SVG filters are used, so it renders the same in Stream Deck's SVG engine.
- * @param {{glyph: string, theme: string, label?: string, style?: "neon"|"vivid"|"real"|"pro"|"app", image?: string, motion?: {kind: string, phase: number}}} spec
+ * @param {{glyph: string, theme: string, label?: string, style?: "neon"|"vivid"|"real"|"pro"|"app"|"light", image?: string, motion?: {kind: string, phase: number}}} spec
  *   style "vivid": white glyph on a colour gradient · "neon": colour-gradient glyph on dark glass ·
  *   "real": the app's/site's own icon (data URI in `image`) on dark glass.
  * @returns {string} SVG markup
  */
 export function keySvg({ glyph, theme, label = "", style = "neon", image, motion }) {
+	if (brandOf() && hasArt(glyph) && BRAND_STYLES.includes(style)) {
+		const text = String(label || '');
+		return brandKeySvg({ brand: brandOf(), glyph, label: text.replace(' · SETUP', ''), setup: text.includes(' · SETUP'), phase: motion ? motion.phase : 0, animate: !!motion, style, colours: THEMES[theme] || BRANDS[brandOf()].colours });
+	}
+	if(style === 'light') style = 'app';
 	if(style === 'app') return appKeySvg({glyph,theme,label,motion},GLYPHS[glyph]||GLYPHS.rocket);
 	let [c1, c2, ink] = THEMES[theme] ?? THEMES.violet;
 	if (style !== "vivid" && NEON_OVERRIDE[theme]) [c1, c2] = NEON_OVERRIDE[theme];
@@ -502,6 +518,7 @@ export function monitorKeySvg({ n, state, caption, motion }) {
  * @param {number} size output px
  */
 export function monoSvg(glyph, size) {
+	if (brandOf() && hasArt(glyph)) return brandMonoSvg(glyph, size);
 	const draw = GLYPHS[glyph] ?? GLYPHS.rocket;
 	return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="14 8 116 108">${draw("#2D2D2D").replace(/#A8F4FF|#FFE07A|#3DDC84|#FF5470/g, "#fff")}</svg>`;
 }
@@ -531,33 +548,39 @@ export const PRESET_ICONS = {
 	back: { glyph: "back", theme: "gold", label: "Back" },
 	monitorcontrol: { glyph: "monitorOn", theme: "graphite", label: "Monitor Control" },
 	// VS Code plugin
-	"vsc-back": { glyph: "vback", theme: "slate", label: "Back" },
-	"vsc-palette": { glyph: "vpalette", theme: "azure", label: "Commands" },
-	"vsc-quickopen": { glyph: "vquickopen", theme: "azure", label: "Go to File" },
-	"vsc-search": { glyph: "vsearch", theme: "azure", label: "Search" },
-	"vsc-terminal": { glyph: "vterminal", theme: "cyan", label: "Terminal" },
-	"vsc-explorer": { glyph: "vtree", theme: "azure", label: "Explorer" },
-	"vsc-scm": { glyph: "vbranch", theme: "amber", label: "Git" },
-	"vsc-commit": { glyph: "vcommit", theme: "amber", label: "Commit" },
-	"vsc-push": { glyph: "vpush", theme: "amber", label: "Push" },
-	"vsc-pull": { glyph: "vpull", theme: "amber", label: "Pull" },
-	"vsc-newterm": { glyph: "vnewterm", theme: "cyan", label: "New Term" },
-	"vsc-run": { glyph: "vplay", theme: "emerald", label: "Run" },
-	"vsc-debug": { glyph: "vbug", theme: "crimson", label: "Debug" },
-	"vsc-stop": { glyph: "vstop", theme: "crimson", label: "Stop" },
-	"vsc-format": { glyph: "vformat", theme: "iris", label: "Format" },
-	"vsc-saveall": { glyph: "vsave", theme: "azure", label: "Save All" },
-	"vsc-sidebar": { glyph: "vsidebar", theme: "slate", label: "Sidebar" },
-	"vsc-split": { glyph: "vsplit", theme: "slate", label: "Split" },
-	"vsc-comment": { glyph: "vcomment", theme: "iris", label: "Comment" },
-	"vsc-definition": { glyph: "vtarget", theme: "cyan", label: "Definition" },
-	"vsc-rename": { glyph: "vpencil", theme: "amber", label: "Rename" },
-	"vsc-problems": { glyph: "vwarning", theme: "amber", label: "Problems" },
-	"vsc-zen": { glyph: "vmoon", theme: "iris", label: "Zen" },
-	"vsc-close": { glyph: "vclose", theme: "slate", label: "Close" },
-	"vsc-shortcut": { glyph: "vkeyboard", theme: "cyan", label: "Shortcut" },
-	"vsc-command": { glyph: "vpalette", theme: "cyan", label: "Command" },
-	"vsc-project": { glyph: "vproject", theme: "azure", label: "Project" },
+	"vsc-back": { glyph: "back", theme: "vscode", label: "Back" },
+	"vsc-palette": { glyph: "commands", theme: "vscode", label: "Commands" },
+	"vsc-quickopen": { glyph: "quickopen", theme: "vscode", label: "Go to File" },
+	"vsc-search": { glyph: "search", theme: "vscode", label: "Search" },
+	"vsc-terminal": { glyph: "terminal", theme: "vscode", label: "Terminal" },
+	"vsc-explorer": { glyph: "explorer", theme: "vscode", label: "Explorer" },
+	"vsc-scm": { glyph: "branch", theme: "vscode", label: "Git" },
+	"vsc-commit": { glyph: "commit", theme: "vscode", label: "Commit" },
+	"vsc-push": { glyph: "push", theme: "vscode", label: "Push" },
+	"vsc-pull": { glyph: "pull", theme: "vscode", label: "Pull" },
+	"vsc-newterm": { glyph: "newterm", theme: "vscode", label: "New Term" },
+	"vsc-run": { glyph: "play", theme: "vscode", label: "Run" },
+	"vsc-debug": { glyph: "bug", theme: "vscode", label: "Debug" },
+	"vsc-stop": { glyph: "stop", theme: "vscode", label: "Stop" },
+	"vsc-format": { glyph: "format", theme: "vscode", label: "Format" },
+	"vsc-saveall": { glyph: "save", theme: "vscode", label: "Save All" },
+	"vsc-sidebar": { glyph: "sidebar", theme: "vscode", label: "Sidebar" },
+	"vsc-split": { glyph: "split", theme: "vscode", label: "Split" },
+	"vsc-comment": { glyph: "comment", theme: "vscode", label: "Comment" },
+	"vsc-definition": { glyph: "definition", theme: "vscode", label: "Definition" },
+	"vsc-rename": { glyph: "rename", theme: "vscode", label: "Rename" },
+	"vsc-problems": { glyph: "problems", theme: "vscode", label: "Problems" },
+	"vsc-zen": { glyph: "zen", theme: "vscode", label: "Zen" },
+	"vsc-close": { glyph: "closeeditor", theme: "vscode", label: "Close" },
+	"vsc-shortcut": { glyph: "shortcut", theme: "vscode", label: "Shortcut" },
+	"vsc-command": { glyph: "command", theme: "vscode", label: "Command" },
+	"vsc-project": { glyph: "project", theme: "vscode", label: "Project" },
+	"vsc-copilot": { glyph: "copilot", theme: "vscode", label: "Copilot Chat" },
+	"vsc-quickfix": { glyph: "quickfix", theme: "vscode", label: "Quick Fix" },
+	"vsc-panel": { glyph: "panel", theme: "vscode", label: "Panel" },
+	"vsc-extensions": { glyph: "extensions", theme: "vscode", label: "Extensions" },
+	"vsc-more": { glyph: "more", theme: "vscode", label: "More" },
+	"vsc-main": { glyph: "main", theme: "vscode", label: "Main" },
 	copy: { glyph: "copy", theme: "indigo", label: "Copy" },
 	paste: { glyph: "paste", theme: "fire", label: "Paste" },
 };

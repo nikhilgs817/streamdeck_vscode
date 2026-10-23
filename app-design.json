@@ -1,10 +1,12 @@
 {
   "id": "vscode",
   "name": "VS Code",
-  "background": "#181818",
-  "surface": "#202020",
-  "ink": "#d9e8f4",
-  "accent": "#3baff0",
-  "border": "#3a3d41",
+  "styleName": "VS Code Dark",
+  "light": true,
+  "background": "#161616",
+  "surface": "#1F1F1F",
+  "ink": "#E6E6E6",
+  "accent": "#3794FF",
+  "border": "#333333",
   "radius": 3
 }

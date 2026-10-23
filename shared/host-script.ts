@@ -273,6 +273,9 @@ public static class DailyOpsWin {
 		} catch { return "\n\n0"; }
 	}
 
+	public static int ForegroundPid() { IntPtr h = GetForegroundWindow(); if (h == IntPtr.Zero) return 0; uint pid; GetWindowThreadProcessId(h, out pid); return (int)pid; }
+	// Win+<key> (for example Win+H voice typing). SendKeys cannot press the Windows key.
+	public static void WinKey(byte vk) { keybd_event(0x5B, 0, 0, UIntPtr.Zero); keybd_event(vk, 0, 0, UIntPtr.Zero); keybd_event(vk, 0, 2, UIntPtr.Zero); keybd_event(0x5B, 0, 2, UIntPtr.Zero); }
 	// Brings the most recent window of any of the named processes to the front. Returns false if none is running.
 	public static bool Activate(string names) {
 		HashSet<uint> pids = new HashSet<uint>();
@@ -751,18 +754,48 @@ while ($true) {
 			}
 			'sendto' {
 				# a[0] = process names ("Code|Code - Insiders"), a[1] = JSON steps [{k:"^+p"},{w:200},{t:"Git: Push"}]
+				# Fails closed: nothing is typed unless the named app is really in front, and it stops if focus moves away.
 				Ensure-Native
-				if ($a[0] -and -not [DailyOpsWin]::Activate($a[0])) { $status = 'miss'; $msg = 'not running: ' + $a[0]; break }
+				$target = 0
+				if ($a[0]) {
+					if (-not [DailyOpsWin]::Activate($a[0])) { $status = 'miss'; $msg = 'Open VS Code first.'; break }
+					Start-Sleep -Milliseconds 90
+					$target = [DailyOpsWin]::ForegroundPid()
+					$fgName = ''; try { $fgName = (Get-Process -Id $target -ErrorAction Stop).ProcessName } catch { }
+					if (@($a[0].Split('|')) -notcontains $fgName) { $status = 'miss'; $msg = 'VS Code did not come to the front. Nothing was sent.'; break }
+				}
 				$sh = Shell
-				$first = $true
-				foreach ($st in @(ConvertFrom-Json $a[1])) {
-					if ($first -and $a[0]) { Start-Sleep -Milliseconds 90 }
-					$first = $false
-					if ($st.w) { Start-Sleep -Milliseconds ([int]$st.w) }
+				# Windows PowerShell 5.1 returns a JSON array as one object from a pipeline; assign first so it enumerates.
+				$steps = ConvertFrom-Json $a[1]
+				foreach ($st in @($steps)) {
+					if ($target -and [DailyOpsWin]::ForegroundPid() -ne $target) { $status = 'miss'; $msg = 'VS Code lost focus. Nothing more was sent.'; break }
+					if ($st.w) { Start-Sleep -Milliseconds ([Math]::Min(2000, [int]$st.w)) }
 					if ($st.k) { $sh.SendKeys([string]$st.k) }
 					if ($st.t) { $sh.SendKeys((SK-Escape ([string]$st.t))) }
 				}
-				$msg = 'sent'
+				if ($status -eq 'ok') { $msg = 'sent' }
+			}
+			'appkeys' {
+				# a[0] = process names ("Claude"), a[1] = executable path pattern, a[2] = JSON steps [{k:"^+o"},{w:120},{win:72}]
+				# Fails closed: nothing is typed unless the verified app is in front, and it stops if focus moves away.
+				Ensure-Native
+				$names = $a[0].Split('|')
+				$isApp = { param($procId) try { $pr = Get-Process -Id $procId -ErrorAction Stop; if ($names -notcontains $pr.ProcessName) { return $false }; if ($a[1]) { $pa = ''; try { $pa = $pr.Path } catch { }; if (-not $pa -or $pa -notmatch $a[1]) { return $false } }; return $true } catch { return $false } }
+				if (-not [DailyOpsWin]::Activate($a[0])) { $status = 'miss'; $msg = 'Open the app first.'; break }
+				Start-Sleep -Milliseconds 90
+				$target = [DailyOpsWin]::ForegroundPid()
+				if (-not (& $isApp $target)) { $status = 'miss'; $msg = 'The app did not come to the front. Nothing was sent.'; break }
+				$sh = Shell
+				# Windows PowerShell 5.1 returns a JSON array as one object from a pipeline; assign first so it enumerates.
+				$steps = ConvertFrom-Json $a[2]
+				foreach ($st in @($steps)) {
+					if ([DailyOpsWin]::ForegroundPid() -ne $target) { $status = 'miss'; $msg = 'The app lost focus. Nothing more was sent.'; break }
+					if ($st.w) { Start-Sleep -Milliseconds ([Math]::Min(2000, [int]$st.w)) }
+					if ($st.k) { $sh.SendKeys([string]$st.k) }
+					if ($st.win) { [DailyOpsWin]::WinKey([byte]$st.win) }
+					Start-Sleep -Milliseconds 30
+				}
+				if ($status -eq 'ok') { $msg = 'sent' }
 			}
 			'watchfg' { Ensure-Native; [DailyOpsWin]::WatchForeground(250); $msg = 'watching' }
 			'monitors' { Ensure-Native; $msg = [DailyOpsWin]::Describe($a[0]) }

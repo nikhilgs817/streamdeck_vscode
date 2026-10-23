@@ -21,6 +21,9 @@ if(!existsSync(dependencyFile)||sha(readFileSync(dependencyFile))!==config.Toolk
 }
 const metadata={PluginId:manifest.UUID,Version:manifest.Version,File:packageName,Sha256:sha(readFileSync(packageFile))};
 for(const destination of [join(bundle,'installer-manifest.json'),join(ROOT,'dist/installer-manifest.json')])writeFileSync(destination,JSON.stringify(metadata,null,2)+'\n');
+// Pin the package hash in the installer itself so a downloaded manifest cannot vouch for itself.
+const pinned={...config,PackageSha256:metadata.Sha256};
+for(const destination of [join(bundle,'installer/plugin.json'),join(ROOT,'installer/plugin.json')])writeFileSync(destination,JSON.stringify(pinned,null,2)+'\n');
 const files={};
 // Explicit allowlist: never archive a whole build directory or local runtime data.
 for(const file of [launcher,'installer/Install-Plugin.ps1','installer/plugin.json',packageName,'installer-manifest.json','READ-ME-FIRST.txt','dependency/WindowsDailyToolkit-Installer.zip'])files[bundleName+'/'+file]=readFileSync(join(bundle,file));

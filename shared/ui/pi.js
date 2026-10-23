@@ -303,11 +303,13 @@
 	function build() {
 		const show = (id, on) => ($(id).hidden = !on);
 		show("styleApp", !!window.DailyOpsDesign);
+		show("styleLight", !!(window.DailyOpsDesign && window.DailyOpsDesign.light));
+		if (window.DailyOpsDesign && window.DailyOpsDesign.styleName) $("styleApp").textContent = window.DailyOpsDesign.styleName;
 		const companion = window.DailyOpsCompanion;
 		const definition = companion?.commands?.find((c) => "comp-" + c.id === kind);
 		show("sec-companion", !!definition);
 		if (definition) {
-			const fixed = ["back", "focus", "url", "page"].includes(definition.operation);
+			const fixed = ["back", "focus", "url", "page", "applink"].includes(definition.operation);
 			$("companionTitle").textContent = companion.name;
 			$("companionDescription").textContent = definition.description;
 			$("companionSetup").hidden = !definition.setup;
@@ -642,7 +644,7 @@
 
 	function currentStyle() {
 		const st = settings.iconStyle;
-		if (st === "app" || st === "real" || st === "neon" || st === "vivid" || st === "pro") return st === "real" && !REAL_CAPABLE.includes(kind) ? "neon" : st;
+		if (st === "app" || st === "light" || st === "real" || st === "neon" || st === "vivid" || st === "pro") return st === "real" && !REAL_CAPABLE.includes(kind) ? "neon" : st;
 		return I().PRESET_ICONS[kind]?.style || (["app", "website"].includes(kind) ? "real" : kind.indexOf("vsc-") === 0 ? "pro" : "neon");
 	}
 

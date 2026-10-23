@@ -116,7 +116,7 @@ try {
 	c = dry().slice(n3).find((x) => x.command === "sendto");
 	check("Custom Command 'Git: Sync' → palette", c && JSON.parse(c.args[1]).some((s) => s.t === "Git: Sync"));
 	const lbl = [...sent].reverse().find((m) => m.event === "setImage" && m.context === "c-command");
-	check("Custom Command key is labelled from the command", lbl && decodeURIComponent(lbl.payload.image).includes("SYNC"));
+	check("Custom Command key is labelled from the command", lbl && /sync/i.test(decodeURIComponent(lbl.payload.image)));
 
 	// 3) Back key → previous (main) keys
 	let before = switches().length;
@@ -184,10 +184,11 @@ try {
 	key("project", { folderPath: "C:\\src\\infra" });
 	await sleep(900);
 	const pc = dry().slice(n4);
-	check("Open Project → VS Code with the folder", pc.some((x) => (x.command === "path" || x.command === "cmd") && x.args[1] === '"C:\\src\\infra"'));
+	check("Open Project → VS Code with the folder", pc.some((x) => x.command === "path" && x.args[1] === '"C:\\src\\infra"'));
+	check("Open Project never falls back to cmd.exe", !pc.some((x) => x.command === "cmd"));
 	check("Open Project → then shows the VS Code keys", switches().slice(before).some((m) => m.payload?.profile === "profiles/VS Code"));
 	const pl = [...sent].reverse().find((m) => m.event === "setImage" && m.context === "c-project");
-	check("Open Project key is labelled with the folder name", pl && decodeURIComponent(pl.payload.image).includes("INFRA"));
+	check("Open Project key is labelled with the folder name", pl && /infra/i.test(decodeURIComponent(pl.payload.image)));
 
 	// 8) Daily Ops' Apps page is open → focus changes don't take over that deck
 	disappear();

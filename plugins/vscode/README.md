@@ -1,3 +1,3 @@
 # VS Code Controls
 
-See the [repository README](../../README.md) for current setup, appearance controls and build instructions.
+See the [main README](../../README.md) for features, install and the key list.

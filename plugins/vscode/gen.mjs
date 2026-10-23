@@ -8,7 +8,7 @@ import { buildProfile, copyUi, writeActionImages, writePluginIcons, writer } fro
 const here = dirname(fileURLToPath(import.meta.url));
 const UUID = "com.dailyops.vscode.v2";
 const NAME = "VS Code Controls";
-const VERSION = "2.4.1.0";
+const VERSION = "2.5.0.0";
 const sd = join(here, `${UUID}.sdPlugin`);
 const PROFILE = "profiles/VS Code"; // must match deck.ts PROFILE
 const DESIGN=JSON.parse(readFileSync(join(here,'../../app-design.json'),'utf8'));
@@ -44,23 +44,37 @@ const ACTIONS = [
 	["close", "Close Editor", "Ctrl+W"],
 	["shortcut", "Custom Shortcut…", "Any VS Code keyboard shortcut, e.g. Ctrl+K Ctrl+S"],
 	["command", "Custom Command…", "Any Command Palette command, e.g. Git: Sync"],
+	["copilot", "Copilot Chat", "Open the chat view (Ctrl+Alt+I)"],
+	["quickfix", "Quick Fix", "Quick fixes and refactorings (Ctrl+.)"],
+	["panel", "Toggle Panel", "Show or hide the bottom panel (Ctrl+J)"],
+	["extensions", "Extensions", "Ctrl+Shift+X"],
+	["more", "More", "Show page 2 of the VS Code keys"],
+	["main", "Main", "Back to page 1 of the VS Code keys"],
 ];
 
-/** Default layout for a 15-key Stream Deck (5 × 3), "column,row". */
-const LAYOUT = {
-	"0,0": "back", "1,0": "palette", "2,0": "quickopen", "3,0": "search", "4,0": "terminal",
-	"0,1": "explorer", "1,1": "scm", "2,1": "commit", "3,1": "push", "4,1": "newterm",
-	"0,2": "run", "1,2": "debug", "2,2": "stop", "3,2": "format", "4,2": "saveall",
-};
+/** Default layout for a 15-key Stream Deck (5 × 3), "column,row": page 1 everyday keys, page 2 via More. */
+const PAGES = [
+	{ name: "VS Code", layout: {
+		"0,0": "back", "1,0": "palette", "2,0": "quickopen", "3,0": "search", "4,0": "terminal",
+		"0,1": "explorer", "1,1": "scm", "2,1": "commit", "3,1": "push", "4,1": "copilot",
+		"0,2": "run", "1,2": "debug", "2,2": "stop", "3,2": "saveall", "4,2": "more",
+	} },
+	{ name: "More", layout: {
+		"0,0": "main", "1,0": "format", "2,0": "quickfix", "3,0": "rename", "4,0": "definition",
+		"0,1": "problems", "1,1": "comment", "2,1": "split", "3,1": "sidebar", "4,1": "panel",
+		"0,2": "pull", "1,2": "newterm", "2,2": "extensions", "3,2": "zen", "4,2": "close",
+	} },
+];
+const LAYOUT = PAGES[0].layout;
 
 const write = writer(sd);
 writeActionImages(sd, ACTIONS.map(([id]) => ({ id, kind: `vsc-${id}` })));
-writePluginIcons(sd, { glyph: "code", theme: "azure", style: "app" });
+writePluginIcons(sd, { glyph: "project", theme: "vscode", style: "app" });
 write('app-design.json', JSON.stringify(DESIGN));
 copyUi(sd);
 write('ui/companion.js','window.DailyOpsDesign='+JSON.stringify(DESIGN)+';window.DailyOpsIcons.setAppDesign(window.DailyOpsDesign);for(const [kind,preset] of Object.entries(window.DailyOpsIcons.PRESET_ICONS))if(kind.startsWith("vsc-"))preset.style="app";');
 
-buildProfile({ sd, uuid: UUID, pluginName: NAME, version: VERSION, profile: PROFILE, title: "VS Code", layout: LAYOUT, actions: ACTIONS });
+buildProfile({ sd, uuid: UUID, pluginName: NAME, version: VERSION, profile: PROFILE, title: "VS Code", layout: LAYOUT, pages: PAGES, actions: ACTIONS });
 
 const manifest = {
 	$schema: "https://schemas.elgato.com/streamdeck/plugins/manifest.json",

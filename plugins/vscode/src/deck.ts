@@ -56,6 +56,9 @@ async function localBack(deviceId?: string): Promise<void> {
 
 /** Shows page `page` (0 = first) of the VS Code keys on one device. */
 export async function showPage(deviceId: string, page: number): Promise<void> {
+	// Every plugin switch (even a page change) replaces Stream Deck's "previous profile"; go back first so Back still reaches the main keys.
+	await streamDeck.profiles.switchToProfile(deviceId);
+	await new Promise((r) => setTimeout(r, 60));
 	await streamDeck.profiles.switchToProfile(deviceId, PROFILE, page);
 	switched.add(deviceId);
 }

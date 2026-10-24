@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.5.2
+
+- **Back fixed:** moving between pages (More, Main and the other page keys) no longer replaces your main keys as the place Back returns to. Back, and switching away from the app or minimizing it, now return to your Default profile.
+- Back and page presses are now written to the plugin log for troubleshooting.
+
 ## 2.5.1
 
 - Shared artwork library update (no change to keys).

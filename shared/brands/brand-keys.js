@@ -382,6 +382,117 @@ ART.send = (p) => {
 		`<path d="M72 ${f(84 - 4 * wave(p))}h0" ${line(T.cut, 4)} opacity=".5"/>`;
 };
 
+// ── Trading icons (thinkorswim, Fidelity Trader+) ──
+const BUY = "#2ECC71", SELL = "#FF4D5E";
+Object.assign(ART, {
+	buy: (p) => {
+		const y = -6 * wave(p);
+		return `<rect x="26" y="22" width="92" height="70" rx="14" fill="${BUY}" fill-opacity=".14" ${sline(BUY, 4)}/>` +
+			`<path d="M36 78l20-18 14 10 30-30" ${line(BUY, 6)} stroke-dasharray="${f(40 + 70 * wave(p))} 200"/>` +
+			`<g transform="translate(0 ${f(y)})"><path d="M90 34h16v16" ${line(BUY, 6)}/></g>` +
+			`<circle cx="44" cy="38" r="9" fill="${BUY}"/><path d="M44 33v10M39 38h10" ${line(T.cut, 3)}/>`;
+	},
+	sell: (p) => {
+		const y = 6 * wave(p);
+		return `<rect x="26" y="22" width="92" height="70" rx="14" fill="${SELL}" fill-opacity=".14" ${sline(SELL, 4)}/>` +
+			`<path d="M36 38l20 18 14-10 30 30" ${line(SELL, 6)} stroke-dasharray="${f(40 + 70 * wave(p))} 200"/>` +
+			`<g transform="translate(0 ${f(y)})"><path d="M90 76h16V60" ${line(SELL, 6)}/></g>` +
+			`<circle cx="44" cy="78" r="9" fill="${SELL}"/><path d="M39 78h10" ${line(T.cut, 3)}/>`;
+	},
+	otoco: (p) => {
+		const d = 4 * wave(p);
+		return `<rect x="46" y="16" width="52" height="24" rx="7" fill="${T.clay}"/><path d="M60 28h24" ${line(T.cut, 4)}/>` +
+			`<path d="M72 40v14M40 70V54h64v16" ${line(T.muted, 4.5)}/>` +
+			`<rect x="16" y="${f(70 - d)}" width="50" height="26" rx="7" fill="${BUY}" fill-opacity=".2" ${sline(BUY, 4)}/><path d="M32 ${f(87 - d)}l9-8 9 8" ${line(BUY, 4)}/>` +
+			`<rect x="78" y="${f(70 + d)}" width="50" height="26" rx="7" fill="${SELL}" fill-opacity=".2" ${sline(SELL, 4)}/><path d="M94 ${f(79 + d)}l9 8 9-8" ${line(SELL, 4)}/>`;
+	},
+	positions: (p) => `<rect x="24" y="38" width="96" height="58" rx="9" fill="${T.ink}" fill-opacity=".05" ${sline(T.ink, 5)}/><path d="M56 38v-8a6 6 0 0 1 6-6h20a6 6 0 0 1 6 6v8" ${line(T.ink, 5)}/>` +
+		[0, 1, 2].map((i) => `<rect x="${40 + i * 24}" y="${f(84 - (10 + i * 8) * (0.6 + 0.4 * wave((p + i * 0.2) % 1)))}" width="14" height="${f((10 + i * 8) * (0.6 + 0.4 * wave((p + i * 0.2) % 1)))}" rx="3" fill="${i === 2 ? BUY : T.clay}"/>`).join(""),
+	orders: (p) => {
+		const hl = Math.floor(p * 3) % 3;
+		return `<rect x="26" y="20" width="92" height="76" rx="9" fill="${T.ink}" fill-opacity=".05" ${sline(T.ink, 5)}/>` +
+			[0, 1, 2].map((i) => `<rect x="34" y="${32 + i * 20}" width="76" height="14" rx="4" fill="${i === hl ? T.clay : "none"}" fill-opacity=".25"/><circle cx="44" cy="${39 + i * 20}" r="4" fill="${i === 1 ? SELL : BUY}"/><path d="M54 ${39 + i * 20}h${i === 2 ? 30 : 46}" ${line(T.ink, 4)}/>`).join("");
+	},
+	ladder: (p) => {
+		const r = Math.floor(p * 6) % 6;
+		return `<rect x="34" y="16" width="76" height="84" rx="8" fill="${T.ink}" fill-opacity=".05" ${sline(T.ink, 4.5)}/>` +
+			[0, 1, 2, 3, 4, 5].map((i) => `<rect x="40" y="${22 + i * 13}" width="64" height="10" rx="2" fill="${i < 3 ? SELL : BUY}" opacity="${i === r ? 0.9 : 0.25}"/>`).join("") +
+			`<path d="M72 22v74" ${line(T.cut, 2)}/>`;
+	},
+	candles: (p) => {
+		const c = (x, top, bot, o, cl, col, k) => { const s = 1 + 0.18 * Math.sin((p + k) * TAU); const mid = (o + cl) / 2, h = Math.abs(cl - o) * s;
+			return `<path d="M${x} ${top}V${bot}" ${line(col, 3.5)}/><rect x="${x - 8}" y="${f(mid - h / 2)}" width="16" height="${f(h)}" rx="3" fill="${col}"/>`; };
+		return `<path d="M20 98h104" ${line(T.faint, 3)}/>` + c(36, 50, 92, 60, 84, SELL, 0) + c(60, 36, 86, 46, 74, BUY, 0.25) + c(84, 28, 70, 36, 58, SELL, 0.5) + c(108, 14, 60, 22, 48, BUY, 0.75);
+	},
+	leveltwo: (p) => [0, 1, 2, 3].map((i) => { const w = 18 + i * 10 + 8 * wave((p + i * 0.15) % 1); return `<rect x="${f(70 - w)}" y="${24 + i * 18}" width="${f(w)}" height="12" rx="3" fill="${BUY}" opacity=".85"/><rect x="74" y="${24 + i * 18}" width="${f(w * 0.9)}" height="12" rx="3" fill="${SELL}" opacity=".85"/>`; }).join("") + `<path d="M72 18v78" ${line(T.ink, 2.5)}/>`,
+	timesales: (p) => {
+		const off = (p * 3 % 1) * 16;
+		let rows = "";
+		for (let i = -1; i < 5; i++) { const y = 26 + i * 16 + off; if (y < 22 || y > 92) continue; rows += `<circle cx="38" cy="${f(y + 4)}" r="4" fill="${(i + 10) % 3 ? BUY : SELL}"/><path d="M50 ${f(y + 4)}h${(i + 10) % 2 ? 54 : 40}" ${line(T.ink, 4)}/>`; }
+		return `<rect x="24" y="18" width="96" height="80" rx="9" fill="${T.ink}" fill-opacity=".05" ${sline(T.ink, 4.5)}/>` + rows;
+	},
+	watchlist: (p) => `<rect x="24" y="22" width="96" height="72" rx="9" fill="${T.ink}" fill-opacity=".05" ${sline(T.ink, 4.5)}/>` +
+		[0, 1, 2].map((i) => `<path d="M36 ${42 + i * 18}h40" ${line(T.muted, 4)}/><path d="M86 ${42 + i * 18}h${f(14 + 8 * wave((p + i * 0.3) % 1))}" ${line(i === 1 ? SELL : BUY, 4.5)}/>`).join("") +
+		sparkle(112, 22, 8, T.clay, wave(p)),
+	hotkeys: (p) => ART.shortcuts(p),
+	chartsettings: (p) => `<path d="M22 92h60M22 92V30" ${line(T.muted, 4)}/><path d="M28 80l14-16 12 8 18-22" ${line(T.clay, 5)}/>` +
+		`<g transform="rotate(${f(p * 45)} 98 70)">${[0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<rect x="94" y="46" width="8" height="10" rx="2" fill="${T.ink}" transform="rotate(${i * 45} 98 70)"/>`).join("")}<circle cx="98" cy="70" r="16" fill="${T.surface}" ${sline(T.ink, 5)}/></g><circle cx="98" cy="70" r="5" fill="${T.clay}"/>`,
+	timeframe: (p) => {
+		const tf = ["1m", "2m", "5m", "D"][Math.floor(p * 4) % 4];
+		return `<circle cx="72" cy="52" r="32" fill="${T.ink}" fill-opacity=".05" ${sline(T.ink, 5)}/><path d="M72 52V32" ${line(T.muted, 4)} transform="rotate(${f(p * 360)} 72 52)"/>` +
+			`<rect x="52" y="76" width="40" height="22" rx="11" fill="${T.clay}"/><text x="72" y="92" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="800" fill="${T.cut}">${tf}</text>`;
+	},
+	scan: (p) => `<circle cx="72" cy="56" r="38" fill="${T.ink}" fill-opacity=".04" ${sline(T.muted, 3.5)}/><circle cx="72" cy="56" r="24" fill="none" ${sline(T.faint, 3)}/>` +
+		`<path d="M72 56L${f(72 + 38 * Math.cos(p * TAU))} ${f(56 + 38 * Math.sin(p * TAU))}" ${line(T.clay, 4.5)}/>` +
+		`<circle cx="92" cy="40" r="5" fill="${BUY}" opacity="${f(wave(p))}"/><circle cx="54" cy="70" r="5" fill="${BUY}" opacity="${f(wave((p + 0.5) % 1))}"/>`,
+	riskcheck: (p) => `<path d="M72 16l38 14v26c0 24-16 38-38 46-22-8-38-22-38-46V30z" fill="${T.clay}" fill-opacity=".14" ${sline(T.ink, 5)}/>` +
+		`<path d="M56 56l12 12 22-24" ${line(T.clay, 6.5)} stroke-dasharray="${f(20 + 40 * wave(p))} 100"/>`,
+	tradeplan: (p) => `<path d="M38 22h68v76H38z" fill="${T.ink}" fill-opacity=".05" ${sline(T.ink, 5)}/><rect x="56" y="14" width="32" height="14" rx="5" fill="${T.clay}"/>` +
+		[0, 1, 2].map((i) => `<path d="M48 ${46 + i * 16}l5 5 9-9" ${line(i < 1 + Math.floor(p * 3) % 3 ? BUY : T.faint, 3.5)}/><path d="M68 ${48 + i * 16}h28" ${line(T.muted, 4)}/>`).join(""),
+	journal: (p) => `<path d="M30 24h56a10 10 0 0 1 10 10v64H40a10 10 0 0 1-10-10z" fill="${T.ink}" fill-opacity=".05" ${sline(T.ink, 5)}/><path d="M30 88a10 10 0 0 1 10-10h56" ${line(T.ink, 5)}/>` +
+		`<path d="M44 40h36M44 52h${f(12 + 24 * wave(p))}" ${line(T.clay, 4.5)}/><path d="M104 30l12 12-26 26H78V56z" fill="${T.clay}" opacity=".9"/>`,
+	partial: (p) => {
+		const a = 120 * (0.6 + 0.4 * wave(p)), r = 30, x = 72 + r * Math.sin(a * Math.PI / 180), y = 50 - r * Math.cos(a * Math.PI / 180);
+		return `<circle cx="72" cy="50" r="${r}" fill="${T.ink}" fill-opacity=".08" ${sline(T.ink, 4.5)}/>` +
+			`<path d="M72 50V${50 - r}A${r} ${r} 0 0 1 ${f(x)} ${f(y)}z" fill="${T.clay}"/><text x="72" y="100" text-anchor="middle" font-family="Segoe UI, Arial" font-size="14" font-weight="800" fill="${T.ink}">1/3</text>`;
+	},
+	breakeven: (p) => `<path d="M20 60h104" ${line(T.muted, 3.5)} stroke-dasharray="6 6"/><text x="28" y="52" font-family="Segoe UI, Arial" font-size="14" font-weight="800" fill="${T.muted}">B/E</text>` +
+		`<path d="M30 ${f(92 - 32 * wave(p))}h84" ${line(SELL, 5)}/><path d="M100 ${f(80 - 32 * wave(p))}v-12M94 ${f(74 - 32 * wave(p))}l6-6 6 6" ${line(T.clay, 4)}/>`,
+	trail: (p) => {
+		const px = 30 + 80 * ((p * 1.0) % 1);
+		return `<path d="M22 88l18-14 14 6 18-22 16 8 22-30" ${line(BUY, 5)}/>` +
+			`<path d="M22 100l18-14 14 6 18-22 16 8 22-30" ${line(SELL, 3.5)} stroke-dasharray="7 6" opacity=".9"/>` +
+			`<circle cx="${f(px)}" cy="${f(96 - (px - 22) * 0.55)}" r="4" fill="${T.clay}"/>`;
+	},
+	flatten: (p) => `<path d="M24 ${f(56 - 26 * (1 - wave(p)))}Q48 ${f(56 + 26 * (1 - wave(p)))} 72 56T120 56" ${line(T.muted, 4)}/><path d="M22 56h100" ${line(SELL, 6)} opacity="${f(0.4 + 0.6 * wave(p))}"/>` +
+		`<circle cx="72" cy="56" r="13" fill="${SELL}"/><path d="M66 50l12 12M78 50L66 62" ${line(T.cut, 3.5)}/>`,
+	cancelall: (p) => `<rect x="26" y="20" width="92" height="76" rx="9" fill="${T.ink}" fill-opacity=".05" ${sline(T.ink, 5)}/>` +
+		[0, 1, 2].map((i) => `<path d="M38 ${40 + i * 18}h50" ${line(T.muted, 4)}/>`).join("") +
+		`<g transform="translate(98 74) rotate(${f(90 * wave(p))})"><circle r="16" fill="${SELL}"/><path d="M-6-6L6 6M6-6L-6 6" ${line(T.cut, 4)}/></g>`,
+	tradepage: (p) => `<path d="M80 14L44 64h22l-6 38 40-54H78z" fill="${T.clay}" opacity="${f(0.6 + 0.4 * wave(p))}" ${sline(T.clay, 3)}/>`,
+	planpage: (p) => `<path d="M24 32l30-10 36 10 30-10v66l-30 10-36-10-30 10z" fill="${T.ink}" fill-opacity=".05" ${sline(T.ink, 4.5)}/><path d="M54 22v66M90 32v66" ${line(T.muted, 3.5)}/>` +
+		`<circle cx="${f(40 + 50 * wave(p))}" cy="${f(64 - 18 * wave(p))}" r="6" fill="${T.clay}"/>`,
+	managepage: (p) => [0, 1, 2].map((i) => { const k = 0.2 + 0.6 * wave((p + i * 0.25) % 1); return `<path d="M${40 + i * 32} 24v66" ${line(T.muted, 4)}/><rect x="${30 + i * 32}" y="${f(24 + 56 * k)}" width="20" height="12" rx="4" fill="${i === 1 ? T.clay : T.ink}"/>`; }).join(""),
+	nextfield: (p) => `<rect x="22" y="38" width="62" height="36" rx="8" fill="none" ${sline(T.muted, 4)}/><path d="M${f(88 + 6 * wave(p))} 56h26M${f(104 + 6 * wave(p))} 44l12 12-12 12" ${line(T.clay, 5.5)}/>`,
+	previousfield: (p) => `<rect x="60" y="38" width="62" height="36" rx="8" fill="none" ${sline(T.muted, 4)}/><path d="M${f(56 - 6 * wave(p))} 56H30M${f(40 - 6 * wave(p))} 44L28 56l12 12" ${line(T.clay, 5.5)}/>`,
+	escape: (p) => `<rect x="28" y="28" width="88" height="56" rx="12" fill="${T.surface}" ${sline(T.ink, 5)}/><text x="72" y="64" text-anchor="middle" font-family="Segoe UI, Arial" font-size="22" font-weight="800" fill="${T.clay}" opacity="${f(0.6 + 0.4 * wave(p))}">Esc</text>`,
+	pageup: (p) => `<path d="M40 88h64" ${line(T.muted, 4)}/><path d="M72 ${f(76 - 8 * wave(p))}V30M56 46l16-16 16 16M56 62l16-16 16 16" ${line(T.clay, 5.5)}/>`,
+	pagedown: (p) => `<path d="M40 24h64" ${line(T.muted, 4)}/><path d="M72 ${f(36 + 8 * wave(p))}v46M56 66l16 16 16-16M56 50l16 16 16-16" ${line(T.clay, 5.5)}/>`,
+	balances: (p) => `<rect x="22" y="30" width="100" height="64" rx="10" fill="${T.ink}" fill-opacity=".05" ${sline(T.ink, 5)}/><path d="M22 48h100" ${line(T.muted, 4)}/>` +
+		`<text x="72" y="82" text-anchor="middle" font-family="Segoe UI, Arial" font-size="24" font-weight="800" fill="${T.clay}">$</text>` + sparkle(110, 30, 7, BUY, wave(p)),
+	news: (p) => `<rect x="24" y="24" width="96" height="70" rx="9" fill="${T.ink}" fill-opacity=".05" ${sline(T.ink, 5)}/><rect x="34" y="34" width="34" height="26" rx="4" fill="${T.clay}" opacity="${f(0.6 + 0.4 * wave(p))}"/>` +
+		`<path d="M76 38h34M76 50h28M34 72h76M34 84h56" ${line(T.muted, 4)}/>`,
+	alerts: (p) => `<g transform="rotate(${f(12 * Math.sin(p * TAU * 2))} 72 26)"><path d="M48 80V56a24 24 0 0 1 48 0v24l8 8H40z" fill="${T.ink}" fill-opacity=".06" ${sline(T.ink, 5)}/><path d="M64 96a8 8 0 0 0 16 0" ${line(T.ink, 5)}/></g><circle cx="98" cy="34" r="9" fill="${T.clay}"/>`,
+	layouts: (p) => {
+		const w = 34 + 10 * Math.sin(p * TAU);
+		return `<rect x="20" y="24" width="104" height="70" rx="8" fill="none" ${sline(T.ink, 5)}/><rect x="26" y="30" width="${f(w)}" height="58" rx="4" fill="${T.clay}" opacity=".85"/>` +
+			`<rect x="${f(32 + w)}" y="30" width="${f(86 - w)}" height="26" rx="4" fill="${T.muted}" opacity=".6"/><rect x="${f(32 + w)}" y="62" width="${f(86 - w)}" height="26" rx="4" fill="${T.muted}" opacity=".4"/>`;
+	},
+	tools: (p) => `<g transform="rotate(${f(-10 + 20 * wave(p))} 72 56)"><path d="M86 22a18 18 0 0 0-22 24L28 82l12 12 36-36a18 18 0 0 0 24-22l-10 10-10-4-4-10z" fill="${T.ink}" fill-opacity=".08" ${sline(T.ink, 5)}/></g><circle cx="100" cy="88" r="7" fill="${T.clay}"/>`,
+	ticket: (p) => `<path d="M28 26h88v20a10 10 0 0 0 0 20v20H28V66a10 10 0 0 0 0-20z" fill="${T.ink}" fill-opacity=".06" ${sline(T.ink, 5)}/>` +
+		`<path d="M48 46h30M48 66h${f(20 + 20 * wave(p))}" ${line(T.clay, 5)}/><path d="M96 34v44" ${line(T.muted, 3)} stroke-dasharray="4 5"/>`,
+});
+
 // ── Styles ──
 const hex = (h) => { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
 const mix = (a, b, t) => "#" + hex(a).map((v, i) => Math.round(v + (hex(b)[i] - v) * t).toString(16).padStart(2, "0")).join("");
@@ -396,6 +507,16 @@ export const BRANDS = {
 		app: { bgTop: "#252526", bgBottom: "#161616", edge: "#333333", ink: "#E6E6E6", muted: "#8A8A8A", faint: "#3C3C3C", clay: "#3794FF", clayLight: "#7FB9FF", surface: "#1F1F1F", cut: "#161616" },
 		light: { bgTop: "#FFFFFF", bgBottom: "#EEF2F7", edge: "#D4D9E0", ink: "#1F2328", muted: "#8C959F", faint: "#DDE3EA", clay: "#005FB8", clayLight: "#3B8EEA", surface: "#FFFFFF", cut: "#FFFFFF" },
 		colours: ["#4DA3FF", "#0B5CAD", "#06315E"],
+	},
+	thinkorswim: {
+		app: { bgTop: "#1F2124", bgBottom: "#0B0C0D", edge: "#34383C", ink: "#E2E6EA", muted: "#7C848C", faint: "#33373B", clay: "#1FC7B6", clayLight: "#7EE6DA", surface: "#17191B", cut: "#0B0C0D" },
+		light: { bgTop: "#FFFFFF", bgBottom: "#ECEFF2", edge: "#D3D8DD", ink: "#1C2126", muted: "#8A939C", faint: "#DDE2E7", clay: "#0E9C8E", clayLight: "#3CC7B8", surface: "#FFFFFF", cut: "#FFFFFF" },
+		colours: ["#2BE0C9", "#0E8C80", "#063D38"],
+	},
+	fidelitytrader: {
+		app: { bgTop: "#1C2119", bgBottom: "#0A0C09", edge: "#323B2C", ink: "#EEF3E8", muted: "#86917C", faint: "#323A2C", clay: "#8DC63F", clayLight: "#BDE38A", surface: "#151913", cut: "#0A0C09" },
+		light: { bgTop: "#FFFFFF", bgBottom: "#EEF2EA", edge: "#D3DACB", ink: "#1D2418", muted: "#89937E", faint: "#DEE4D7", clay: "#5E9A1C", clayLight: "#8DC63F", surface: "#FFFFFF", cut: "#FFFFFF" },
+		colours: ["#A6E05A", "#4E8A16", "#203A08"],
 	},
 	chatgpt: {
 		app: { bgTop: "#262626", bgBottom: "#0E0E0E", edge: "#3A3A3A", ink: "#F2F2F2", muted: "#8C8C8C", faint: "#3C3C3C", clay: "#10A37F", clayLight: "#5FD3AE", surface: "#1C1C1C", cut: "#0E0E0E" },
@@ -468,3 +589,38 @@ export function brandMonoSvg(glyph, size) {
 export const claudeMonoSvg = brandMonoSvg;
 export const hasArt = (glyph) => Object.prototype.hasOwnProperty.call(ART, glyph);
 export const hasClaudeArt = hasArt;
+
+/**
+ * Usage meter key: big percentage inside a ring that fills with the used share of the window.
+ * state: "ok" | "setup" | "signin" | "blocked" | "nodata" | "error" | "loading".
+ */
+export function meterKeySvg({ brand = "claude", style = "app", colours, pct, caption = "5-HOUR", until = "", state = "ok", label = "", phase = 0, animate = true }) {
+	const p = animate ? ((phase % 1) + 1) % 1 : 0, p2 = (p * 2) % 1;
+	const pal = palette(style, colours, brand);
+	const u = "mt" + (++uid).toString(36);
+	const ok = state === "ok" && typeof pct === "number";
+	const v = ok ? Math.max(0, Math.min(100, pct)) : 0;
+	const col = !ok ? pal.muted : v >= 85 ? "#FF4D5E" : v >= 60 ? "#F5A524" : pal.clay;
+	const R = 38, C = 2 * Math.PI * R, cx = 72, cy = 56;
+	const msg = { setup: "SETUP", signin: "SIGN IN", blocked: "BLOCKED", nodata: "NO DATA", error: "ERROR", loading: "…" }[state] || "";
+	const text = esc(String(label).slice(0, 14));
+	const fs = text.length > 11 ? 16.5 : text.length > 8 ? 18.5 : 21;
+	const glow = animate ? 0.12 + 0.2 * wave(p2) : 0.12;
+	let body = `<defs><linearGradient id="${u}b" x1="0" y1="0" x2="${style === "vivid" ? 1 : 0}" y2="1"><stop offset="0" stop-color="${pal.bgTop}"/><stop offset="1" stop-color="${pal.bgBottom}"/></linearGradient>` +
+		`<radialGradient id="${u}g" cx=".5" cy=".4" r=".55"><stop offset="0" stop-color="${col}" stop-opacity="${f(glow)}"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></radialGradient></defs>` +
+		`<rect width="144" height="144" fill="url(#${u}b)"/><rect width="144" height="144" fill="url(#${u}g)"/>` +
+		`<rect x="1.5" y="1.5" width="141" height="141" rx="14" fill="none" stroke="${pal.edge}" stroke-width="2"/>`;
+	if (pal.bar) body += `<rect width="144" height="6" fill="${pal.bar[0]}"/>`;
+	body += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${pal.faint}" stroke-width="9"/>`;
+	if (ok && v > 0) body += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${col}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${f(C * v / 100)} ${f(C)}" transform="rotate(-90 ${cx} ${cy})"/>`;
+	// A bright dot travels round the ring so the key always looks alive.
+	if (animate) { const a = p * 2 * Math.PI - Math.PI / 2; body += `<circle cx="${f(cx + R * Math.cos(a))}" cy="${f(cy + R * Math.sin(a))}" r="3.2" fill="${pal.ink}" opacity=".85"/>`; }
+	body += `<text x="${cx}" y="${ok ? 58 : 58}" text-anchor="middle" font-family="${LABEL_FONT}" font-size="${ok ? (v >= 100 ? 26 : 30) : 15}" font-weight="800" fill="${ok ? pal.ink : col}" stroke="${ok ? pal.ink : col}" stroke-width=".5">${ok ? Math.round(v) + "%" : msg}</text>`;
+	body += `<text x="${cx}" y="76" text-anchor="middle" font-family="${LABEL_FONT}" font-size="11" font-weight="700" letter-spacing="1" fill="${pal.muted}">${esc(ok && until ? until : caption)}</text>`;
+	if (text) body += `<path d="M60 110h24" stroke="${col}" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>` +
+		`<text x="72" y="132" text-anchor="middle" font-family="${LABEL_FONT}" font-size="${fs}" font-weight="800" fill="${style === "neon" ? "#ffffff" : pal.ink}" stroke="${style === "neon" ? "#ffffff" : pal.ink}" stroke-width=".55" stroke-linejoin="round">${text}</text>`;
+	Object.assign(T, CLAUDE_TOKENS);
+	return `<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144"><g data-app-design="${esc(brand)}" data-meter="${esc(state)}">${body}</g></svg>`;
+}
+
+ART.meter = (p) => `<circle cx="72" cy="56" r="34" fill="none" stroke="${T.faint}" stroke-width="8"/><circle cx="72" cy="56" r="34" fill="none" stroke="${T.clay}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${f(214 * (0.3 + 0.4 * wave(p)))} 214" transform="rotate(-90 72 56)"/><text x="72" y="64" text-anchor="middle" font-family="Segoe UI, Arial" font-size="22" font-weight="800" fill="${T.ink}">%</text>`;

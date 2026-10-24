@@ -4,12 +4,12 @@
   "PluginId": "com.dailyops.vscode.v2",
   "PluginFolder": "vscode",
   "Profile": "profiles/VS Code",
-  "Version": "2.5.0.0",
+  "Version": "2.5.1.0",
   "Repository": "nikhilgs817/streamdeck_vscode",
   "Toolkit": {
     "Version": "2.6.1.0",
     "Url": "https://github.com/nikhilgs817/windows_daily_toolkit/releases/download/v2.6.1/WindowsDailyToolkit-Installer-2.6.1.0.zip",
     "Sha256": "c2e1fd3e6e2671b16b7f4a70d54913596569164c5d89cf305e521d60310621c3"
   },
-  "PackageSha256": "c597af425f0d9d01ba639279c5b2496bd37191d3c9389fb321231425d86fb2e8"
+  "PackageSha256": "10dda20b58f9f20c39c4eef0914b0c27a6c3bc93fb9e42e3f5ff6ecb7e824842"
 }

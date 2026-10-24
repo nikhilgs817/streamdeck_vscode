@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.5.1
+
+- Shared artwork library update (no change to keys).
+
 ## 2.5.0
 
 - Bigger, bolder key labels (+1 pt, extra-bold Segoe UI).

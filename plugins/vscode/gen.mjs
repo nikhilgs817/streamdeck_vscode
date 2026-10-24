@@ -8,7 +8,7 @@ import { buildProfile, copyUi, writeActionImages, writePluginIcons, writer } fro
 const here = dirname(fileURLToPath(import.meta.url));
 const UUID = "com.dailyops.vscode.v2";
 const NAME = "VS Code Controls";
-const VERSION = "2.5.0.0";
+const VERSION = "2.5.1.0";
 const sd = join(here, `${UUID}.sdPlugin`);
 const PROFILE = "profiles/VS Code"; // must match deck.ts PROFILE
 const DESIGN=JSON.parse(readFileSync(join(here,'../../app-design.json'),'utf8'));

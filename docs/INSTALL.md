@@ -2,10 +2,10 @@
 
 ## Recommended: double-click installer
 
-1. Download **VSCodeControls-Installer-2.5.0.0.zip** from [GitHub Releases](https://github.com/nikhilgs817/streamdeck_vscode/releases/latest).
+1. Download **VSCodeControls-Installer-2.5.1.0.zip** from [GitHub Releases](https://github.com/nikhilgs817/streamdeck_vscode/releases/latest).
 2. Right-click the ZIP and choose **Extract All**. Open the extracted **VSCodeControls-Installer** folder.
 3. Double-click **Install-VSCodeControls.cmd**. Keep the other files in that folder.
-4. Wait for **Installed VS Code Controls 2.5.0.0**. Stream Deck closes briefly and opens again automatically.
+4. Wait for **Installed VS Code Controls 2.5.1.0**. Stream Deck closes briefly and opens again automatically.
 5. In Stream Deck, find **VS Code Controls** in the action list. On a compatible 15-key deck, you can also choose **VS Code** from the profile dropdown for its ready-made app layout.
 
 No Git, Node.js, npm, developer mode or build commands are needed. Run the installer as your normal Windows user. If Stream Deck is missing or too old, the script asks first, then can install/update the official **Elgato.StreamDeck** package through Windows Package Manager; Windows may request administrator approval for that prerequisite. If Windows Package Manager is unavailable, install Stream Deck from [Elgato Downloads](https://www.elgato.com/downloads), then run this installer again.

@@ -1,4 +1,4 @@
-// Simulated Stream Deck for Daily Ops – VS Code v2: deck switching (deep link, focus, back, close) and key commands.
+// Simulated Stream Deck for Windows Toolkit – VS Code v2: deck switching (deep link, focus, back, close) and key commands.
 import { spawn } from "node:child_process";
 import { appendFileSync, existsSync, readFileSync, rmSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -7,9 +7,9 @@ import { fileURLToPath } from "node:url";
 import { WebSocketServer } from "ws";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const sd = join(here, "com.dailyops.vscode.v2.sdPlugin");
+const sd = join(here, "com.windowstoolkit.vscode.sdPlugin");
 const manifest = JSON.parse(readFileSync(join(sd, "manifest.json"), "utf8"));
-const runDir = mkdtempSync(join(tmpdir(), "dailyops-vscode-test-"));
+const runDir = mkdtempSync(join(tmpdir(), "windowstoolkit-vscode-test-"));
 const LOG = join(runDir, "dryrun.jsonl");
 const EVENTS = join(runDir, "events.txt");
 rmSync(LOG, { force: true });
@@ -43,11 +43,11 @@ const info = {
 	colors: {},
 	devicePixelRatio: 2,
 	devices: [{ id: "DEV1", name: "Stream Deck", size: { columns: 5, rows: 3 }, type: 0 }],
-	plugin: { uuid: "com.dailyops.vscode.v2", version: "2.0.0.0" },
+	plugin: { uuid: "com.windowstoolkit.vscode", version: "2.0.0.0" },
 };
-const proc = spawn(process.execPath, [join(sd, "bin/plugin.js"), "-port", String(port), "-pluginUUID", "com.dailyops.vscode.v2", "-registerEvent", "registerPlugin", "-info", JSON.stringify(info)], {
+const proc = spawn(process.execPath, [join(sd, "bin/plugin.js"), "-port", String(port), "-pluginUUID", "com.windowstoolkit.vscode", "-registerEvent", "registerPlugin", "-info", JSON.stringify(info)], {
 	cwd: sd,
-	env: { ...process.env, DAILYOPS_DRYRUN: "1", DAILYOPS_DRYRUN_LOG: LOG, DAILYOPS_DRYRUN_EVENTS: EVENTS },
+	env: { ...process.env, WINTOOLKIT_DRYRUN: "1", WINTOOLKIT_DRYRUN_LOG: LOG, WINTOOLKIT_DRYRUN_EVENTS: EVENTS },
 	stdio: ["ignore", "pipe", "pipe"],
 });
 let out = "";
@@ -62,12 +62,12 @@ const check = (name, ok, extra = "") => {
 
 /** Pretend Stream Deck put our whole layout on screen (or took it away). */
 const LAYOUT = ["back", "palette", "quickopen", "search", "terminal", "explorer", "scm", "commit", "push", "newterm", "run", "debug", "stop", "format", "saveall"];
-const appear = () => LAYOUT.forEach((id, i) => send({ event: "willAppear", action: `com.dailyops.vscode.v2.${id}`, context: `c-${id}`, device: "DEV1", payload: { settings: {}, coordinates: { column: i % 5, row: Math.floor(i / 5) }, controller: "Keypad", isInMultiAction: false, state: 0 } }));
-const disappear = () => LAYOUT.forEach((id, i) => send({ event: "willDisappear", action: `com.dailyops.vscode.v2.${id}`, context: `c-${id}`, device: "DEV1", payload: { settings: {}, coordinates: { column: i % 5, row: Math.floor(i / 5) }, controller: "Keypad", isInMultiAction: false, state: 0 } }));
+const appear = () => LAYOUT.forEach((id, i) => send({ event: "willAppear", action: `com.windowstoolkit.vscode.${id}`, context: `c-${id}`, device: "DEV1", payload: { settings: {}, coordinates: { column: i % 5, row: Math.floor(i / 5) }, controller: "Keypad", isInMultiAction: false, state: 0 } }));
+const disappear = () => LAYOUT.forEach((id, i) => send({ event: "willDisappear", action: `com.windowstoolkit.vscode.${id}`, context: `c-${id}`, device: "DEV1", payload: { settings: {}, coordinates: { column: i % 5, row: Math.floor(i / 5) }, controller: "Keypad", isInMultiAction: false, state: 0 } }));
 const key = (id, settings = {}) => {
 	const p = { settings, coordinates: { column: 0, row: 0 }, isInMultiAction: false, state: 0 };
-	send({ event: "keyDown", action: `com.dailyops.vscode.v2.${id}`, context: `c-${id}`, device: "DEV1", payload: p });
-	setTimeout(() => send({ event: "keyUp", action: `com.dailyops.vscode.v2.${id}`, context: `c-${id}`, device: "DEV1", payload: p }), 40);
+	send({ event: "keyDown", action: `com.windowstoolkit.vscode.${id}`, context: `c-${id}`, device: "DEV1", payload: p });
+	setTimeout(() => send({ event: "keyUp", action: `com.windowstoolkit.vscode.${id}`, context: `c-${id}`, device: "DEV1", payload: p }), 40);
 };
 
 try {
@@ -78,7 +78,7 @@ try {
 	await sleep(300);
 	check("starts watching window focus", dry().some((c) => c.command === "watchfg"));
 
-	// 1) Hand-off from Daily Ops (deep link)
+	// 1) Hand-off from Windows Toolkit (deep link)
 	send({ event: "didReceiveDeepLink", payload: { url: "/show?device=DEV1&streamdeck=hidden" } });
 	const sw = await waitFor((m) => m.event === "switchToProfile");
 	check("deep link /show → switches DEV1 to the VS Code keys", sw.device === "DEV1" && sw.payload?.profile === "profiles/VS Code", JSON.stringify(sw));
@@ -102,13 +102,13 @@ try {
 	const steps = c ? JSON.parse(c.args[1]) : [];
 	check("Git Push → runs 'Git: Push' from the Command Palette", steps.some((s) => s.t === "Git: Push") && steps.at(-1).k === "{ENTER}");
 	const n2 = dry().length;
-	send({ event: "willAppear", action: "com.dailyops.vscode.v2.shortcut", context: "c-shortcut", device: "DEV1", payload: { settings: { shortcut: "Ctrl+K Ctrl+S" }, coordinates: { column: 0, row: 0 }, controller: "Keypad", isInMultiAction: false, state: 0 } });
+	send({ event: "willAppear", action: "com.windowstoolkit.vscode.shortcut", context: "c-shortcut", device: "DEV1", payload: { settings: { shortcut: "Ctrl+K Ctrl+S" }, coordinates: { column: 0, row: 0 }, controller: "Keypad", isInMultiAction: false, state: 0 } });
 	await sleep(100);
 	key("shortcut", { shortcut: "Ctrl+K Ctrl+S" });
 	await sleep(150);
 	c = dry().slice(n2).find((x) => x.command === "sendto");
 	check("Custom Shortcut 'Ctrl+K Ctrl+S' → ^k^s", c && JSON.parse(c.args[1])[0].k === "^k^s", c?.args[1]);
-	send({ event: "willAppear", action: "com.dailyops.vscode.v2.command", context: "c-command", device: "DEV1", payload: { settings: { command: "Git: Sync" }, coordinates: { column: 0, row: 0 }, controller: "Keypad", isInMultiAction: false, state: 0 } });
+	send({ event: "willAppear", action: "com.windowstoolkit.vscode.command", context: "c-command", device: "DEV1", payload: { settings: { command: "Git: Sync" }, coordinates: { column: 0, row: 0 }, controller: "Keypad", isInMultiAction: false, state: 0 } });
 	await sleep(100);
 	const n3 = dry().length;
 	key("command", { command: "Git: Sync" });
@@ -177,7 +177,7 @@ try {
 	await sleep(400);
 
 	// 7) Open Project: launches Code.exe with the folder, then shows the keys
-	send({ event: "willAppear", action: "com.dailyops.vscode.v2.project", context: "c-project", device: "DEV1", payload: { settings: { folderPath: "C:\\src\\infra" }, coordinates: { column: 0, row: 0 }, controller: "Keypad", isInMultiAction: false, state: 0 } });
+	send({ event: "willAppear", action: "com.windowstoolkit.vscode.project", context: "c-project", device: "DEV1", payload: { settings: { folderPath: "C:\\src\\infra" }, coordinates: { column: 0, row: 0 }, controller: "Keypad", isInMultiAction: false, state: 0 } });
 	await sleep(200);
 	const n4 = dry().length;
 	before = switches().length;
@@ -190,7 +190,7 @@ try {
 	const pl = [...sent].reverse().find((m) => m.event === "setImage" && m.context === "c-project");
 	check("Open Project key is labelled with the folder name", pl && /infra/i.test(decodeURIComponent(pl.payload.image)));
 
-	// 8) Daily Ops' Apps page is open → focus changes don't take over that deck
+	// 8) Windows Toolkit' Apps page is open → focus changes don't take over that deck
 	disappear();
 	focus("explorer");
 	await sleep(800);

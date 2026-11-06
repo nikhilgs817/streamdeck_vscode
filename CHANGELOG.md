@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0
+
+- **Renamed for Windows Toolkit:** the plugin ID is now `com.windowstoolkit.vscode` (was `com.dailyops.vscode.v2`). The installer backs up and removes the old plugin; keys made with it need to be added again (the bundled profile covers the standard layout).
+- Works with **Windows Toolkit 3.0** (bundled) for automatic app switching.
+- Key animations now loop every 12 seconds (slower, calmer movement).
+
 ## 2.5.2
 
 - **Back fixed:** moving between pages (More, Main and the other page keys) no longer replaces your main keys as the place Back returns to. Back, and switching away from the app or minimizing it, now return to your Default profile.
@@ -24,7 +30,7 @@
 ## 2.4.1
 
 - Added a double-click Windows installer with prerequisite checks, package verification, local backups, preserved profiles/settings and automatic rollback.
-- Included the pinned Windows Daily Toolkit dependency for automatic app switching. Compatible or newer installed versions are kept.
+- Included the pinned Windows Toolkit dependency for automatic app switching. Compatible or newer installed versions are kept.
 - Added a connected-runtime startup receipt and isolated installer tests.
 - Added installation, update, troubleshooting and recovery documentation.
 - Switched the development bundler to official Rollup WASM for restricted Windows environments.

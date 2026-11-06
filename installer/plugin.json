@@ -1,15 +1,18 @@
 {
   "InstallerId": "VSCodeControls",
   "Name": "VS Code Controls",
-  "PluginId": "com.dailyops.vscode.v2",
+  "PluginId": "com.windowstoolkit.vscode",
   "PluginFolder": "vscode",
   "Profile": "profiles/VS Code",
-  "Version": "2.5.2.0",
+  "Version": "3.0.0.0",
   "Repository": "nikhilgs817/streamdeck_vscode",
   "Toolkit": {
-    "Version": "2.6.1.0",
-    "Url": "https://github.com/nikhilgs817/windows_daily_toolkit/releases/download/v2.6.1/WindowsDailyToolkit-Installer-2.6.1.0.zip",
-    "Sha256": "c2e1fd3e6e2671b16b7f4a70d54913596569164c5d89cf305e521d60310621c3"
+    "Version": "3.0.0.0",
+    "Url": "https://github.com/nikhilgs817/windows_toolkit/releases/download/v3.0.0/WindowsToolkit-Installer-3.0.0.0.zip",
+    "Sha256": "31506048f13823fdbff39b69dbfb66cb63952bb1a5ffb8c73b477a319b1df0b5"
   },
-  "PackageSha256": "5563dd95e148c81a2a70307fec4cddc253bd4bedb9534859caa644abdf3bf29e"
+  "PackageSha256": "121233266911163bf0804e6a850ecf4c9cdebb644886d24716a047c42e50a418",
+  "RetiredPluginIds": [
+    "com.dailyops.vscode.v2"
+  ]
 }

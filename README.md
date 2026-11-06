@@ -1,18 +1,18 @@
 # VS Code Controls
 
-Unofficial Elgato Stream Deck plugin for **Visual Studio Code on Windows** (also Code Insiders and VSCodium). Version 2.5.2.0.
+Unofficial Elgato Stream Deck plugin for **Visual Studio Code on Windows** (also Code Insiders and VSCodium). Version 3.0.0.0.
 
-33 animated keys for commands, files, search, terminal, Git, run/debug, Copilot Chat and editing, plus Open Project, Custom Shortcut and Custom Command. The keys appear automatically when VS Code is in front (with Windows Daily Toolkit), and **Back** returns to your main keys.
+33 animated keys for commands, files, search, terminal, Git, run/debug, Copilot Chat and editing, plus Open Project, Custom Shortcut and Custom Command. The keys appear automatically when VS Code is in front (with Windows Toolkit), and **Back** returns to your main keys.
 
 ![Animated keys](docs/images/deck.gif)
 
 ## Install in three steps
 
-1. Download **VSCodeControls-Installer-2.5.2.0.zip** from [Releases](https://github.com/nikhilgs817/streamdeck_vscode/releases/latest).
+1. Download **VSCodeControls-Installer-3.0.0.0.zip** from [Releases](https://github.com/nikhilgs817/streamdeck_vscode/releases/latest).
 2. Right-click the ZIP, choose **Extract All**, and open the extracted folder.
 3. Double-click **Install-VSCodeControls.cmd**. Wait for the success message; Stream Deck restarts automatically.
 
-No Git, Node.js or build commands are needed. Windows Daily Toolkit is included for automatic app switching. The installer verifies files, backs up your setup, keeps your layouts and settings, and rolls back a failed update. [Full installation, update and recovery guide](docs/INSTALL.md).
+No Git, Node.js or build commands are needed. Windows Toolkit is included for automatic app switching. The installer verifies files, backs up your setup, keeps your layouts and settings, and rolls back a failed update. [Full installation, update and recovery guide](docs/INSTALL.md).
 
 ## The keys
 

@@ -1,5 +1,5 @@
 import { action, type Action, type KeyDownEvent } from "@elgato/streamdeck";
-import { DailyAction, LaunchAction, log, type Appearance, type FolderSettings } from "../../../shared/base.js";
+import { ToolkitAction, LaunchAction, log, type Appearance, type FolderSettings } from "../../../shared/base.js";
 import { ps, type PsResult } from "../../../shared/ps.js";
 import type { IconSource } from "../../../shared/realicon.js";
 import { PROCESSES, backToMain, showKeys, showPage } from "./deck.js";
@@ -83,7 +83,7 @@ export function sendToCode(steps: Step[]): Promise<PsResult> {
 	return ps.run("sendto", [PROCESSES.join("|"), JSON.stringify(steps)]);
 }
 
-abstract class VsKey extends DailyAction<KeySettings> {
+abstract class VsKey extends ToolkitAction<KeySettings> {
 	protected abstract steps(s: KeySettings): Step[] | string;
 	override async onKeyDown(ev: KeyDownEvent<KeySettings>): Promise<void> {
 		const steps = this.steps(ev.payload.settings);
@@ -106,8 +106,8 @@ abstract class CommandKey extends VsKey {
 
 // ---- Back --------------------------------------------------------------------------------------
 
-@action({ UUID: "com.dailyops.vscode.v2.back" })
-export class BackKey extends DailyAction<Appearance> {
+@action({ UUID: "com.windowstoolkit.vscode.back" })
+export class BackKey extends ToolkitAction<Appearance> {
 	protected readonly kind = "vsc-back";
 	override async onKeyDown(ev: KeyDownEvent<Appearance>): Promise<void> {
 		await backToMain(ev.action.device.id);
@@ -116,44 +116,44 @@ export class BackKey extends DailyAction<Appearance> {
 
 // ---- Command keys (one class per key; Stream Deck needs a UUID per action) ----------------------
 
-@action({ UUID: "com.dailyops.vscode.v2.palette" }) export class PaletteKey extends CommandKey { protected readonly kind = "vsc-palette"; protected readonly id = "palette"; }
-@action({ UUID: "com.dailyops.vscode.v2.quickopen" }) export class QuickOpenKey extends CommandKey { protected readonly kind = "vsc-quickopen"; protected readonly id = "quickopen"; }
-@action({ UUID: "com.dailyops.vscode.v2.search" }) export class SearchKey extends CommandKey { protected readonly kind = "vsc-search"; protected readonly id = "search"; }
-@action({ UUID: "com.dailyops.vscode.v2.terminal" }) export class TerminalKey extends CommandKey { protected readonly kind = "vsc-terminal"; protected readonly id = "terminal"; }
-@action({ UUID: "com.dailyops.vscode.v2.explorer" }) export class ExplorerKey extends CommandKey { protected readonly kind = "vsc-explorer"; protected readonly id = "explorer"; }
-@action({ UUID: "com.dailyops.vscode.v2.scm" }) export class ScmKey extends CommandKey { protected readonly kind = "vsc-scm"; protected readonly id = "scm"; }
-@action({ UUID: "com.dailyops.vscode.v2.commit" }) export class CommitKey extends CommandKey { protected readonly kind = "vsc-commit"; protected readonly id = "commit"; }
-@action({ UUID: "com.dailyops.vscode.v2.push" }) export class PushKey extends CommandKey { protected readonly kind = "vsc-push"; protected readonly id = "push"; }
-@action({ UUID: "com.dailyops.vscode.v2.pull" }) export class PullKey extends CommandKey { protected readonly kind = "vsc-pull"; protected readonly id = "pull"; }
-@action({ UUID: "com.dailyops.vscode.v2.newterm" }) export class NewTermKey extends CommandKey { protected readonly kind = "vsc-newterm"; protected readonly id = "newterm"; }
-@action({ UUID: "com.dailyops.vscode.v2.run" }) export class RunKey extends CommandKey { protected readonly kind = "vsc-run"; protected readonly id = "run"; }
-@action({ UUID: "com.dailyops.vscode.v2.debug" }) export class DebugKey extends CommandKey { protected readonly kind = "vsc-debug"; protected readonly id = "debug"; }
-@action({ UUID: "com.dailyops.vscode.v2.stop" }) export class StopKey extends CommandKey { protected readonly kind = "vsc-stop"; protected readonly id = "stop"; }
-@action({ UUID: "com.dailyops.vscode.v2.format" }) export class FormatKey extends CommandKey { protected readonly kind = "vsc-format"; protected readonly id = "format"; }
-@action({ UUID: "com.dailyops.vscode.v2.saveall" }) export class SaveAllKey extends CommandKey { protected readonly kind = "vsc-saveall"; protected readonly id = "saveall"; }
-@action({ UUID: "com.dailyops.vscode.v2.sidebar" }) export class SidebarKey extends CommandKey { protected readonly kind = "vsc-sidebar"; protected readonly id = "sidebar"; }
-@action({ UUID: "com.dailyops.vscode.v2.split" }) export class SplitKey extends CommandKey { protected readonly kind = "vsc-split"; protected readonly id = "split"; }
-@action({ UUID: "com.dailyops.vscode.v2.comment" }) export class CommentKey extends CommandKey { protected readonly kind = "vsc-comment"; protected readonly id = "comment"; }
-@action({ UUID: "com.dailyops.vscode.v2.definition" }) export class DefinitionKey extends CommandKey { protected readonly kind = "vsc-definition"; protected readonly id = "definition"; }
-@action({ UUID: "com.dailyops.vscode.v2.rename" }) export class RenameKey extends CommandKey { protected readonly kind = "vsc-rename"; protected readonly id = "rename"; }
-@action({ UUID: "com.dailyops.vscode.v2.problems" }) export class ProblemsKey extends CommandKey { protected readonly kind = "vsc-problems"; protected readonly id = "problems"; }
-@action({ UUID: "com.dailyops.vscode.v2.zen" }) export class ZenKey extends CommandKey { protected readonly kind = "vsc-zen"; protected readonly id = "zen"; }
-@action({ UUID: "com.dailyops.vscode.v2.close" }) export class CloseKey extends CommandKey { protected readonly kind = "vsc-close"; protected readonly id = "close"; }
+@action({ UUID: "com.windowstoolkit.vscode.palette" }) export class PaletteKey extends CommandKey { protected readonly kind = "vsc-palette"; protected readonly id = "palette"; }
+@action({ UUID: "com.windowstoolkit.vscode.quickopen" }) export class QuickOpenKey extends CommandKey { protected readonly kind = "vsc-quickopen"; protected readonly id = "quickopen"; }
+@action({ UUID: "com.windowstoolkit.vscode.search" }) export class SearchKey extends CommandKey { protected readonly kind = "vsc-search"; protected readonly id = "search"; }
+@action({ UUID: "com.windowstoolkit.vscode.terminal" }) export class TerminalKey extends CommandKey { protected readonly kind = "vsc-terminal"; protected readonly id = "terminal"; }
+@action({ UUID: "com.windowstoolkit.vscode.explorer" }) export class ExplorerKey extends CommandKey { protected readonly kind = "vsc-explorer"; protected readonly id = "explorer"; }
+@action({ UUID: "com.windowstoolkit.vscode.scm" }) export class ScmKey extends CommandKey { protected readonly kind = "vsc-scm"; protected readonly id = "scm"; }
+@action({ UUID: "com.windowstoolkit.vscode.commit" }) export class CommitKey extends CommandKey { protected readonly kind = "vsc-commit"; protected readonly id = "commit"; }
+@action({ UUID: "com.windowstoolkit.vscode.push" }) export class PushKey extends CommandKey { protected readonly kind = "vsc-push"; protected readonly id = "push"; }
+@action({ UUID: "com.windowstoolkit.vscode.pull" }) export class PullKey extends CommandKey { protected readonly kind = "vsc-pull"; protected readonly id = "pull"; }
+@action({ UUID: "com.windowstoolkit.vscode.newterm" }) export class NewTermKey extends CommandKey { protected readonly kind = "vsc-newterm"; protected readonly id = "newterm"; }
+@action({ UUID: "com.windowstoolkit.vscode.run" }) export class RunKey extends CommandKey { protected readonly kind = "vsc-run"; protected readonly id = "run"; }
+@action({ UUID: "com.windowstoolkit.vscode.debug" }) export class DebugKey extends CommandKey { protected readonly kind = "vsc-debug"; protected readonly id = "debug"; }
+@action({ UUID: "com.windowstoolkit.vscode.stop" }) export class StopKey extends CommandKey { protected readonly kind = "vsc-stop"; protected readonly id = "stop"; }
+@action({ UUID: "com.windowstoolkit.vscode.format" }) export class FormatKey extends CommandKey { protected readonly kind = "vsc-format"; protected readonly id = "format"; }
+@action({ UUID: "com.windowstoolkit.vscode.saveall" }) export class SaveAllKey extends CommandKey { protected readonly kind = "vsc-saveall"; protected readonly id = "saveall"; }
+@action({ UUID: "com.windowstoolkit.vscode.sidebar" }) export class SidebarKey extends CommandKey { protected readonly kind = "vsc-sidebar"; protected readonly id = "sidebar"; }
+@action({ UUID: "com.windowstoolkit.vscode.split" }) export class SplitKey extends CommandKey { protected readonly kind = "vsc-split"; protected readonly id = "split"; }
+@action({ UUID: "com.windowstoolkit.vscode.comment" }) export class CommentKey extends CommandKey { protected readonly kind = "vsc-comment"; protected readonly id = "comment"; }
+@action({ UUID: "com.windowstoolkit.vscode.definition" }) export class DefinitionKey extends CommandKey { protected readonly kind = "vsc-definition"; protected readonly id = "definition"; }
+@action({ UUID: "com.windowstoolkit.vscode.rename" }) export class RenameKey extends CommandKey { protected readonly kind = "vsc-rename"; protected readonly id = "rename"; }
+@action({ UUID: "com.windowstoolkit.vscode.problems" }) export class ProblemsKey extends CommandKey { protected readonly kind = "vsc-problems"; protected readonly id = "problems"; }
+@action({ UUID: "com.windowstoolkit.vscode.zen" }) export class ZenKey extends CommandKey { protected readonly kind = "vsc-zen"; protected readonly id = "zen"; }
+@action({ UUID: "com.windowstoolkit.vscode.close" }) export class CloseKey extends CommandKey { protected readonly kind = "vsc-close"; protected readonly id = "close"; }
 
-@action({ UUID: "com.dailyops.vscode.v2.copilot" }) export class CopilotKey extends CommandKey { protected readonly kind = "vsc-copilot"; protected readonly id = "copilot"; }
-@action({ UUID: "com.dailyops.vscode.v2.quickfix" }) export class QuickFixKey extends CommandKey { protected readonly kind = "vsc-quickfix"; protected readonly id = "quickfix"; }
-@action({ UUID: "com.dailyops.vscode.v2.panel" }) export class PanelKey extends CommandKey { protected readonly kind = "vsc-panel"; protected readonly id = "panel"; }
-@action({ UUID: "com.dailyops.vscode.v2.extensions" }) export class ExtensionsKey extends CommandKey { protected readonly kind = "vsc-extensions"; protected readonly id = "extensions"; }
+@action({ UUID: "com.windowstoolkit.vscode.copilot" }) export class CopilotKey extends CommandKey { protected readonly kind = "vsc-copilot"; protected readonly id = "copilot"; }
+@action({ UUID: "com.windowstoolkit.vscode.quickfix" }) export class QuickFixKey extends CommandKey { protected readonly kind = "vsc-quickfix"; protected readonly id = "quickfix"; }
+@action({ UUID: "com.windowstoolkit.vscode.panel" }) export class PanelKey extends CommandKey { protected readonly kind = "vsc-panel"; protected readonly id = "panel"; }
+@action({ UUID: "com.windowstoolkit.vscode.extensions" }) export class ExtensionsKey extends CommandKey { protected readonly kind = "vsc-extensions"; protected readonly id = "extensions"; }
 
 // ---- Page keys (More / Main) -------------------------------------------------------------------
 
-@action({ UUID: "com.dailyops.vscode.v2.more" })
-export class MoreKey extends DailyAction<Appearance> {
+@action({ UUID: "com.windowstoolkit.vscode.more" })
+export class MoreKey extends ToolkitAction<Appearance> {
 	protected readonly kind = "vsc-more";
 	override async onKeyDown(ev: KeyDownEvent<Appearance>): Promise<void> { await showPage(ev.action.device.id, 1); }
 }
-@action({ UUID: "com.dailyops.vscode.v2.main" })
-export class MainKey extends DailyAction<Appearance> {
+@action({ UUID: "com.windowstoolkit.vscode.main" })
+export class MainKey extends ToolkitAction<Appearance> {
 	protected readonly kind = "vsc-main";
 	override async onKeyDown(ev: KeyDownEvent<Appearance>): Promise<void> { await showPage(ev.action.device.id, 0); }
 }
@@ -161,7 +161,7 @@ export class MainKey extends DailyAction<Appearance> {
 // ---- Custom keys -------------------------------------------------------------------------------
 
 /** Any VS Code keyboard shortcut, typed like "Ctrl+Shift+P" or "Ctrl+K Ctrl+S". */
-@action({ UUID: "com.dailyops.vscode.v2.shortcut" })
+@action({ UUID: "com.windowstoolkit.vscode.shortcut" })
 export class ShortcutKey extends VsKey {
 	protected readonly kind = "vsc-shortcut";
 	protected override dynamicLabel(s: KeySettings): string | undefined {
@@ -175,7 +175,7 @@ export class ShortcutKey extends VsKey {
 }
 
 /** Any Command Palette command, e.g. "Git: Sync" or "Docker: Compose Up". */
-@action({ UUID: "com.dailyops.vscode.v2.command" })
+@action({ UUID: "com.windowstoolkit.vscode.command" })
 export class CommandPaletteKey extends VsKey {
 	protected readonly kind = "vsc-command";
 	protected override dynamicLabel(s: KeySettings): string | undefined {
@@ -204,7 +204,7 @@ export function projectFolder(raw: string | undefined): string | undefined {
 }
 
 /** Opens a project folder in VS Code (tap / double-tap / hold = monitor 1 / 2 / 3) and shows the VS Code keys. */
-@action({ UUID: "com.dailyops.vscode.v2.project" })
+@action({ UUID: "com.windowstoolkit.vscode.project" })
 export class ProjectKey extends LaunchAction<FolderSettings> {
 	protected readonly kind = "vsc-project";
 	override realSource(s: FolderSettings): IconSource | undefined {

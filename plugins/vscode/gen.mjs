@@ -1,4 +1,4 @@
-// Generates manifest.json, images and the bundled key layout ("VS Code" profile) for Daily Ops – VS Code v2.
+// Generates manifest.json, images and the bundled key layout ("VS Code" profile) for Windows Toolkit – VS Code v2.
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readFileSync } from "node:fs";
@@ -6,9 +6,9 @@ import { PRESET_ICONS, setAppDesign } from "../../shared/icons.js";
 import { buildProfile, copyUi, writeActionImages, writePluginIcons, writer } from "../../tools/common.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const UUID = "com.dailyops.vscode.v2";
+const UUID = "com.windowstoolkit.vscode";
 const NAME = "VS Code Controls";
-const VERSION = "2.5.2.0";
+const VERSION = "3.0.0.0";
 const sd = join(here, `${UUID}.sdPlugin`);
 const PROFILE = "profiles/VS Code"; // must match deck.ts PROFILE
 const DESIGN=JSON.parse(readFileSync(join(here,'../../app-design.json'),'utf8'));
@@ -72,7 +72,7 @@ writeActionImages(sd, ACTIONS.map(([id]) => ({ id, kind: `vsc-${id}` })));
 writePluginIcons(sd, { glyph: "project", theme: "vscode", style: "app" });
 write('app-design.json', JSON.stringify(DESIGN));
 copyUi(sd);
-write('ui/companion.js','window.DailyOpsDesign='+JSON.stringify(DESIGN)+';window.DailyOpsIcons.setAppDesign(window.DailyOpsDesign);for(const [kind,preset] of Object.entries(window.DailyOpsIcons.PRESET_ICONS))if(kind.startsWith("vsc-"))preset.style="app";');
+write('ui/companion.js','window.WinToolkitDesign='+JSON.stringify(DESIGN)+';window.WinToolkitIcons.setAppDesign(window.WinToolkitDesign);for(const [kind,preset] of Object.entries(window.WinToolkitIcons.PRESET_ICONS))if(kind.startsWith("vsc-"))preset.style="app";');
 
 buildProfile({ sd, uuid: UUID, pluginName: NAME, version: VERSION, profile: PROFILE, title: "VS Code", layout: LAYOUT, pages: PAGES, actions: ACTIONS });
 
@@ -80,8 +80,8 @@ const manifest = {
 	$schema: "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
 	Name: NAME,
 	Version: VERSION,
-	Author: "Daily Ops",
-	Description: "VS Code keys for Stream Deck: commands, git, run/debug and more. Opens with Daily Ops v2 and follows VS Code focus — the keys appear when VS Code is in front and go back when you leave.",
+	Author: "Windows Toolkit",
+	Description: "VS Code keys for Stream Deck: commands, git, run/debug and more. Opens with Windows Toolkit v2 and follows VS Code focus — the keys appear when VS Code is in front and go back when you leave.",
 	UUID,
 	Icon: "imgs/plugin/icon",
 	Category: NAME,

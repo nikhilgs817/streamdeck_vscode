@@ -22,12 +22,12 @@ const returnOnClose = () => globals.returnOnClose !== false;
 
 /** Devices currently showing our layout because we switched them. */
 const switched = new Set<string>();
-/** Devices where Daily Ops' Apps page is open: focus changes don't take the deck over there. */
+/** Devices where Windows Toolkit' Apps page is open: focus changes don't take the deck over there. */
 const held = new Set<string>();
 /** Our keys visible per device (lets us notice when the user navigates away by hand). */
 const visible = new Map<string, number>();
 let bridge: CompanionConnection | undefined;
-const toolkitInstalled = () => process.env.DAILYOPS_DRYRUN !== "1" && existsSync(join(dirname(process.argv[1] || ""), "../../com.dailyops.v2.sdPlugin"));
+const toolkitInstalled = () => process.env.WINTOOLKIT_DRYRUN !== "1" && existsSync(join(dirname(process.argv[1] || ""), "../../com.windowstoolkit.core.sdPlugin"));
 
 function deviceIds(): string[] {
 	const all = Array.from(streamDeck.devices);
@@ -75,11 +75,11 @@ export function isShowing(deviceId?: string): boolean {
 
 /** Wires up everything that moves the deck between the main keys and the VS Code keys. */
 export function initDeck(): void {
-	if (process.env.DAILYOPS_DRYRUN !== "1" || process.env.DAILYOPS_COMPANION_PIPE) {
-		bridge = connectCompanion({ uuid: "com.dailyops.vscode.v2", enabled: autoFollow, invoke: (command, device) => command === "show" ? localShow(device) : localBack(device) });
+	if (process.env.WINTOOLKIT_DRYRUN !== "1" || process.env.WINTOOLKIT_COMPANION_PIPE) {
+		bridge = connectCompanion({ uuid: "com.windowstoolkit.vscode", enabled: autoFollow, invoke: (command, device) => command === "show" ? localShow(device) : localBack(device) });
 		streamDeck.settings.onDidReceiveGlobalSettings(() => bridge?.update());
 	}
-	// 1) Daily Ops (or anything) asks us to show our keys: streamdeck://plugins/message/<uuid>/show?device=<id>
+	// 1) Windows Toolkit (or anything) asks us to show our keys: streamdeck://plugins/message/<uuid>/show?device=<id>
 	streamDeck.system.onDidReceiveDeepLink((ev) => {
 		const path = ev.url.path.replace(/\/+$/, "");
 		const device = ev.url.queryParameters.get("device") ?? undefined;

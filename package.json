@@ -1,18 +1,18 @@
 {
   "name": "streamdeck-vscode",
   "type": "module",
-  "version": "2.5.2",
+  "version": "3.0.0",
   "description": "VS Code controls for Elgato Stream Deck on Windows",
   "scripts": {
     "build": "node plugins/vscode/gen.mjs && rollup -c",
     "test": "node plugins/vscode/harness.mjs",
-    "validate": "streamdeck validate plugins/vscode/com.dailyops.vscode.v2.sdPlugin",
-    "pack": "node tools/clean.mjs && streamdeck pack plugins/vscode/com.dailyops.vscode.v2.sdPlugin --output dist --force",
+    "validate": "streamdeck validate plugins/vscode/com.windowstoolkit.vscode.sdPlugin",
+    "pack": "node tools/clean.mjs && streamdeck pack plugins/vscode/com.windowstoolkit.vscode.sdPlugin --output dist --force",
     "build:installer": "node tools/build-installer.mjs",
     "test:installer": "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File tools/test-installer.ps1"
   },
   "keywords": [],
-  "author": "Daily Ops",
+  "author": "Windows Toolkit",
   "license": "MIT",
   "devDependencies": {
     "@elgato/cli": "^1.10.2",

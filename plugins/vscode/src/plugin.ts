@@ -15,7 +15,7 @@ const log = streamDeck.logger.createScope("plugin");
 
 for (const K of ALL_KEYS) streamDeck.actions.registerAction(new K());
 
-/** Settings panel ➜ plugin messages (same protocol as Daily Ops, so the panel code is shared). */
+/** Settings panel ➜ plugin messages (same protocol as Windows Toolkit, so the panel code is shared). */
 streamDeck.ui.onSendToPlugin<{ event?: string; settings?: JsonObject; order?: string }>(async (ev) => {
 	const event = ev.payload?.event;
 	if (event === "getMonitors") {

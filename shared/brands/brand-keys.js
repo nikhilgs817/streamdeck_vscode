@@ -498,6 +498,11 @@ const hex = (h) => { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255
 const mix = (a, b, t) => "#" + hex(a).map((v, i) => Math.round(v + (hex(b)[i] - v) * t).toString(16).padStart(2, "0")).join("");
 /** Brand palettes: `app` = native dark look, `light` = native light look, `colours` = default colour theme. */
 export const BRANDS = {
+	tradingview: {
+		app: { bgTop: "#1E222D", bgBottom: "#131722", edge: "#2A2E39", ink: "#D1D4DC", muted: "#787B86", faint: "#363A45", clay: "#2962FF", clayLight: "#5B8CFF", surface: "#1E222D", cut: "#131722" },
+		light: { bgTop: "#FFFFFF", bgBottom: "#F0F3FA", edge: "#E0E3EB", ink: "#131722", muted: "#787B86", faint: "#E0E3EB", clay: "#2962FF", clayLight: "#5B8CFF", surface: "#FFFFFF", cut: "#FFFFFF" },
+		colours: ["#3D7BFF", "#1E3FCC", "#0A1A66"],
+	},
 	claude: {
 		app: { ...CLAUDE_TOKENS },
 		light: { bgTop: "#FBF9F4", bgBottom: "#ECE7DA", edge: "#D8D0BF", ink: "#3A362E", muted: "#A0988A", faint: "#DED7C8", clay: "#C96442", clayLight: "#E38A64", surface: "#FFFFFF", cut: "#FFFFFF" },
@@ -525,11 +530,96 @@ export const BRANDS = {
 	},
 };
 
+
+// TradingView chart tools (TradingView blue #2962FF, bull #089981, bear #F23645).
+const TV_UP = "#089981", TV_DN = "#F23645", TV_BLUE = "#2962FF";
+const grid = () => `<path d="M22 40h100M22 64h100M22 88h100" stroke="${T.faint}" stroke-width="1.6" stroke-dasharray="3 5"/>`;
+const handle = (x, y) => `<circle cx="${f(x)}" cy="${f(y)}" r="6.5" fill="${T.cut}" stroke="${T.clay}" stroke-width="3.5"/>`;
+const interval = (txt) => (p) => {
+	const k = wave(p);
+	return `<rect x="24" y="24" width="96" height="70" rx="14" fill="${T.clay}" fill-opacity="${f(0.1 + 0.14 * k)}" ${sline(T.clay, 4)}/>` +
+		`<path d="M30 86h${f(84 * p)}" ${line(T.clay, 4)} opacity=".8"/>` +
+		`<text x="72" y="${txt.length > 2 ? 72 : 75}" text-anchor="middle" font-family="Segoe UI, Arial" font-size="${txt.length > 2 ? 32 : 38}" font-weight="800" fill="${T.ink}">${txt}</text>`;
+};
+Object.assign(ART, {
+	pagetrade: (p) => `<path d="M20 98h104" ${line(T.faint, 3)}/>` + [[40, 44, 86, 58, 78, TV_DN, 0], [72, 30, 80, 40, 68, TV_UP, 0.33], [104, 18, 66, 26, 52, TV_UP, 0.66]].map(([x, t, b, o, c, col, k]) => { const s = 1 + 0.2 * Math.sin((p + k) * TAU), m = (o + c) / 2, h = (c - o) * s; return `<path d="M${x} ${t}V${b}" ${line(col, 3.5)}/><rect x="${x - 9}" y="${f(m - h / 2)}" width="18" height="${f(h)}" rx="3" fill="${col}"/>`; }).join(""),
+	pagedraw: (p) => { const t = wave(p), x = 34 + 60 * t, y = 88 - 50 * t; return grid() + `<path d="M28 92L${f(x)} ${f(y)}" ${line(T.clay, 4.5)}/><g transform="translate(${f(x)} ${f(y)}) rotate(45)"><rect x="-6" y="-38" width="12" height="32" rx="2" fill="${T.ink}"/><path d="M-6 -6L0 4 6 -6z" fill="${T.clay}"/></g>`; },
+	pagetime: (p) => `<circle cx="72" cy="60" r="34" fill="${T.clay}" fill-opacity=".12" ${sline(T.ink, 5)}/><path d="M72 60V40" ${line(T.ink, 5)}/><path d="M72 60l${f(22 * Math.sin(p * TAU))} ${f(-22 * Math.cos(p * TAU))}" ${line(T.clay, 5)}/><circle cx="72" cy="60" r="4.5" fill="${T.clay}"/>`,
+	tvbuy: (p) => {
+		const k = wave(p);
+		return `<rect x="22" y="24" width="100" height="66" rx="12" fill="${TV_BLUE}" fill-opacity="${f(0.75 + 0.25 * k)}"/>` +
+			`<path d="M40 74l18-16 12 9 26-26" ${line("#fff", 5.5)} stroke-dasharray="${f(30 + 60 * k)} 200"/><path d="M84 41h12v12" ${line("#fff", 5.5)}/>` +
+			`<circle cx="${f(30 + 84 * p)}" cy="24" r="3" fill="#fff" opacity="${f(1 - k)}"/>`;
+	},
+	tvsell: (p) => {
+		const k = wave(p);
+		return `<rect x="22" y="24" width="100" height="66" rx="12" fill="${TV_DN}" fill-opacity="${f(0.75 + 0.25 * k)}"/>` +
+			`<path d="M40 40l18 16 12-9 26 26" ${line("#fff", 5.5)} stroke-dasharray="${f(30 + 60 * k)} 200"/><path d="M84 73h12V61" ${line("#fff", 5.5)}/>` +
+			`<circle cx="${f(30 + 84 * p)}" cy="90" r="3" fill="#fff" opacity="${f(1 - k)}"/>`;
+	},
+	trendline: (p) => {
+		const t = 0.25 + 0.75 * wave(p), x2 = 32 + 80 * t, y2 = 86 - 56 * t;
+		return grid() + `<path d="M32 86L${f(x2)} ${f(y2)}" ${line(T.clay, 5)}/>` + handle(32, 86) + handle(x2, y2);
+	},
+	hline: (p) => {
+		const y = 64 + 16 * Math.sin(p * TAU);
+		return grid() + `<path d="M20 ${f(y)}h104" ${line(T.clay, 5)}/><rect x="96" y="${f(y - 9)}" width="28" height="18" rx="4" fill="${T.clay}"/>` + handle(48, y);
+	},
+	vline: (p) => {
+		const x = 72 + 26 * Math.sin(p * TAU);
+		return grid() + `<path d="M${f(x)} 22v76" ${line(T.clay, 5)}/>` + handle(x, 60);
+	},
+	crossline: (p) => {
+		const x = 72 + 18 * Math.sin(p * TAU), y = 60 + 14 * Math.cos(p * TAU);
+		return grid() + `<path d="M${f(x)} 22v76M20 ${f(y)}h104" ${line(T.clay, 4.5)}/>` + handle(x, y);
+	},
+	fib: (p) => {
+		const lv = [[0, T.muted], [0.236, TV_DN], [0.382, "#FF9800"], [0.5, TV_UP], [0.618, "#00BCD4"], [1, T.muted]];
+		const sweep = 20 + 104 * Math.min(1, wave(p) * 1.4);
+		return lv.map(([v, c]) => { const y = 26 + v * 68; return `<path d="M24 ${f(y)}H${f(sweep)}" stroke="${c}" stroke-width="4" stroke-linecap="round"/>`; }).join("") +
+			`<path d="M24 94L120 26" stroke="${T.ink}" stroke-width="2.5" stroke-dasharray="5 5" opacity=".7"/>`;
+	},
+	snapshot: (p) => {
+		const flash = Math.max(0, 1 - Math.abs(p - 0.5) * 6);
+		return `<path d="M24 44h20l8-12h40l8 12h20v48H24z" fill="${T.ink}" fill-opacity=".06" ${sline(T.ink, 5)}/><circle cx="72" cy="66" r="16" fill="none" ${sline(T.clay, 5)}/>` +
+			`<circle cx="72" cy="66" r="${f(5 + 9 * flash)}" fill="${T.clay}" opacity="${f(0.4 + 0.6 * flash)}"/>` + sparkle(110, 30, 7 + 6 * flash, T.clay, 0.3 + 0.7 * flash);
+	},
+	indicators: (p) => {
+		const pts = []; for (let i = 0; i <= 20; i++) { const x = 22 + i * 5; pts.push(`${x} ${f(60 + 18 * Math.sin(i / 3 + p * TAU))}`); }
+		return grid() + `<path d="M${pts.join("L")}" ${line(T.clay, 5)}/><text x="104" y="104" font-family="Segoe UI, Arial" font-size="30" font-weight="800" fill="${T.muted}">ƒ</text>`;
+	},
+	logscale: (p) => {
+		const k = wave(p);
+		return `<path d="M30 22v74h90" ${line(T.muted, 4)}/><path d="M34 ${f(92 - 4 * k)}C58 ${f(90 - 6 * k)} 80 ${f(72 - 20 * k)} 114 ${f(30 + 20 * k)}" ${line(T.clay, 5)}/>` +
+			`<rect x="80" y="74" width="34" height="20" rx="5" fill="${T.clay}"/><text x="97" y="89" text-anchor="middle" font-family="Segoe UI, Arial" font-size="14" font-weight="800" fill="${T.cut}">LOG</text>`;
+	},
+	percentscale: (p) => `<path d="M30 22v74h90" ${line(T.muted, 4)}/><text x="76" y="${f(72 - 6 * Math.sin(p * TAU))}" text-anchor="middle" font-family="Segoe UI, Arial" font-size="48" font-weight="800" fill="${T.clay}">%</text>`,
+	invert: (p) => {
+		const r = 180 * wave(p);
+		return `<g transform="rotate(${f(r)} 72 60)"><path d="M28 84l22-20 16 10 30-34" ${line(T.clay, 5.5)}/><path d="M86 40h12v12" ${line(T.clay, 5.5)}/></g><path d="M22 60h100" stroke="${T.faint}" stroke-width="2" stroke-dasharray="4 4"/>`;
+	},
+	gotodate: (p) => `<rect x="26" y="28" width="92" height="66" rx="10" fill="${T.ink}" fill-opacity=".06" ${sline(T.ink, 5)}/><path d="M26 46h92M48 20v14M96 20v14" ${line(T.ink, 5)}/>` +
+		`<rect x="${f(38 + 48 * wave(p))}" y="56" width="22" height="22" rx="5" fill="${T.clay}"/>`,
+	textnote: (p) => `<path d="M34 24h56l20 20v54H34z" fill="${T.ink}" fill-opacity=".06" ${sline(T.ink, 5)}/><path d="M48 54h44M48 68h${f(14 + 30 * wave(p))}" ${line(T.clay, 5)}/><path d="M48 82h24" ${line(T.muted, 5)}/>`,
+	maximize: (p) => { const d = 6 * wave(p); return `<rect x="34" y="30" width="76" height="56" rx="8" fill="${T.clay}" fill-opacity=".14"/><path d="M${f(30 - d)} ${f(44 - d)}V${f(26 - d)}h${f(18)}M${f(114 + d)} ${f(44 - d)}V${f(26 - d)}h-18M${f(30 - d)} ${f(72 + d)}v${f(18)}h18M${f(114 + d)} ${f(72 + d)}v18h-18" ${line(T.clay, 5.5)}/>`; },
+	resetchart: (p) => `<g transform="rotate(${f(-360 * p)} 72 60)"><path d="M100 60a28 28 0 1 1-8-20" ${line(T.clay, 5.5)}/><path d="M94 26v16H78" ${line(T.clay, 5.5)}/></g>` + `<path d="M58 66l8-8 8 6 10-12" ${line(T.ink, 4)}/>`,
+	addwatch: (p) => { const k = wave(p); return `<path d="M64 26l9 19 21 3-15 15 4 21-19-10-19 10 4-21-15-15 21-3z" fill="${T.clay}" fill-opacity="${f(0.2 + 0.6 * k)}" ${sline(T.clay, 4.5)}/><circle cx="104" cy="82" r="14" fill="${T.clay}"/><path d="M104 75v14M97 82h14" ${line(T.cut, 4)}/>`; },
+	savelayout: (p) => { const y = 34 + 20 * wave(p); return `<rect x="30" y="24" width="84" height="74" rx="10" fill="none" ${sline(T.ink, 5)}/><rect x="44" y="24" width="56" height="22" fill="${T.faint}"/><path d="M72 ${f(y - 14)}V${f(y + 10)}M62 ${f(y)}l10 10 10-10" ${line(T.clay, 5)}/><rect x="44" y="70" width="56" height="20" rx="4" fill="${T.clay}" opacity=".85"/>`; },
+	barleft: (p) => { const dx = -10 * wave(p); return `<g transform="translate(${f(dx)} 0)"><path d="M70 40v40M94 34v36M118 44v34" ${line(T.muted, 4)}/><rect x="62" y="48" width="16" height="24" rx="3" fill="${TV_UP}"/><rect x="86" y="42" width="16" height="20" rx="3" fill="${TV_DN}"/></g><path d="M48 60H22m12-12L22 60l12 12" ${line(T.clay, 6)}/>`; },
+	barright: (p) => { const dx = 10 * wave(p); return `<g transform="translate(${f(dx)} 0)"><path d="M28 40v40M52 34v36M76 44v34" ${line(T.muted, 4)}/><rect x="20" y="48" width="16" height="24" rx="3" fill="${TV_UP}"/><rect x="44" y="42" width="16" height="20" rx="3" fill="${TV_DN}"/></g><path d="M96 60h26m-12-12l12 12-12 12" ${line(T.clay, 6)}/>`; },
+	replay: (p) => `<path d="M24 92h96" ${line(T.faint, 3)}/><path d="M36 30v62" ${line(T.clay, 4)}/><path d="M${f(52)} 40l${f(26 + 6 * wave(p))} 20-${f(26 + 6 * wave(p))} 20z" fill="${T.clay}"/><path d="M90 40l26 20-26 20z" fill="${T.clay}" opacity=".5"/>`,
+	pine: (p) => `<path d="M72 18l${f(-22)} 30h12l-18 24h14l-20 26h64l-20-26h14l-18-24h12z" fill="${TV_UP}" fill-opacity="${f(0.25 + 0.45 * wave(p))}" ${sline(TV_UP, 4)}/><path d="M72 98v8" ${line(T.ink, 5)}/>`,
+	tvlogo: (p) => `<rect x="22" y="38" width="38" height="14" fill="${T.ink}"/><rect x="36" y="38" width="14" height="48" fill="${T.ink}"/><circle cx="74" cy="${f(46 - 3 * wave(p))}" r="9" fill="${T.clay}"/><path d="M86 38h20L88 86H70z" fill="${T.ink}"/>`,
+	i1: interval("1m"), i2: interval("2m"), i5: interval("5m"), i15: interval("15m"), i1h: interval("1h"), i4h: interval("4h"), iD: interval("D"), iW: interval("W"),
+});
+
 /** Palettes for every look. `colours` = [start, end, ink] of the chosen colour theme (Colourful/Vivid/Pro). */
 function palette(style, colours, brand) {
 	const b = BRANDS[brand] || BRANDS.claude;
 	const [c1, c2, c3] = colours && colours.length >= 3 ? colours : b.colours;
 	switch (style) {
+		case "glass": return { bgTop: "#1D2029", bgBottom: "#0A0B10", edge: "#2B2F3A", ink: "#ECEFF5", muted: mix(c1, "#0A0B10", 0.35), faint: mix(c1, "#0A0B10", 0.72), clay: mix(c1, "#ffffff", 0.12), clayLight: mix(c1, "#ffffff", 0.5), surface: "#171A22", cut: "#0A0B10", glow: c1, font: "glass", accent: c1 };
+		case "mono": return { bgTop: "#17181D", bgBottom: "#0D0E11", edge: "#24262C", ink: "#EEF0F4", muted: "#8A919E", faint: "#2E3138", clay: "#C9CED8", clayLight: "#E6E9EF", surface: "#16171B", cut: "#0D0E11", glow: c1, font: "mono", accent: c1 };
 		case "light": return { ...b.light, glow: b.light.clay, font: "app" };
 		case "vivid": return { bgTop: c1, bgBottom: c2, edge: mix(c1, "#ffffff", 0.35), ink: "#FFFFFF", muted: mix(c2, "#ffffff", 0.62), faint: mix(c2, "#ffffff", 0.3), clay: c3, clayLight: mix(c3, "#ffffff", 0.35), surface: mix(c2, "#000000", 0.12), cut: c2, glow: "#ffffff", font: "sans" };
 		case "neon": return { bgTop: "#2A2E40", bgBottom: "#0B0D14", edge: mix(c1, "#0B0D14", 0.55), ink: c1, muted: mix(c1, "#0B0D14", 0.45), faint: mix(c1, "#0B0D14", 0.75), clay: mix(c2, "#ffffff", 0.2), clayLight: mix(c1, "#ffffff", 0.55), surface: "#1A1C26", cut: "#0B0D14", glow: c1, font: "sans" };
@@ -543,35 +633,62 @@ let uid = 0;
  * Full 144×144 key. `phase` 0..1 drives the icon animation; labels stay still.
  * style: "app" (Claude Dark, default) · "light" (Claude Light) · "neon" (Colourful) · "vivid" · "pro".
  */
-export function brandKeySvg({ brand = "claude", glyph, label = "", phase = 0, setup = false, animate = true, style = "app", colours }) {
+export function brandKeySvg({ brand = "claude", glyph, label = "", phase = 0, setup = false, animate = true, style = "app", colours, motionStyle = "loop", labelCase = "auto", glow = "normal", press }) {
 	const p = animate ? ((phase % 1) + 1) % 1 : 0;
+	const tileMoves = animate && motionStyle !== "icon", iconMoves = animate && motionStyle !== "glow";
+	const g = { subtle: 0.55, normal: 1, bold: 1.6 }[glow] ?? 1;
 	const pal = palette(style, colours, brand);
 	Object.assign(T, pal);
 	const u = "cl" + (++uid).toString(36);
 	const draw = ART[glyph] || ART.newchat;
+	const quiet = pal.font === "glass" || pal.font === "mono";
 	const serif = pal.font === "app"; // native looks: title-case Segoe UI Bold with the accent rule
-	const raw = String(label).slice(0, 14);
-	const text = esc(serif ? raw : raw.toUpperCase());
-	const fs = serif ? (raw.length > 11 ? 16.5 : raw.length > 8 ? 18.5 : 21) : Math.min(19, Math.floor(130 / Math.max(1, raw.length * 0.64)) + 1);
+	const caseMode = labelCase === "auto" ? (serif || quiet ? "title" : "upper") : labelCase;
+	let raw = String(label).trim();
+	if (raw.length > 18) raw = raw.slice(0, 17).trimEnd() + "…";
+	const shown = caseMode === "upper" ? raw.toUpperCase() : raw;
+	const text = esc(shown);
+	const fit = (size, em, min = 10.5) => Math.max(min, Math.min(size, Math.floor((128 / Math.max(1, shown.length * em)) * 2) / 2));
+	const fs = quiet ? fit(pal.font === "mono" ? 15 : 16.5, caseMode === "upper" ? 0.68 : 0.56) : serif ? fit(21, 0.6, 12) : fit(19, 0.64);
 	// Livelier motion: icon details run two loops per 6 s cycle, the icon bobs, the glow breathes and an accent light travels round the frame.
 	const p2 = (p * 2) % 1;
-	const glowOp = (style === "vivid" ? 0.14 : style === "neon" ? 0.2 : 0.1) + (animate ? 0.22 * wave(p2) : 0);
+	const glowOp = Math.min(0.9, ((style === "vivid" ? 0.14 : style === "neon" ? 0.2 : style === "glass" ? 0.24 : style === "mono" ? 0 : 0.1) + (tileMoves && style !== "mono" ? 0.22 * wave(p2) : 0)) * g);
 	let body = `<defs><linearGradient id="${u}b" x1="0" y1="0" x2="${style === "vivid" ? 1 : 0}" y2="1"><stop offset="0" stop-color="${pal.bgTop}"/><stop offset="1" stop-color="${pal.bgBottom}"/></linearGradient>` +
 		`<radialGradient id="${u}g" cx=".5" cy=".38" r=".55"><stop offset="0" stop-color="${pal.glow}" stop-opacity="${f(glowOp)}"/><stop offset="1" stop-color="${pal.glow}" stop-opacity="0"/></radialGradient>` +
-		(pal.bar ? `<linearGradient id="${u}r" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${pal.bar[0]}"/><stop offset="1" stop-color="${pal.bar[1]}"/></linearGradient>` : "") + `</defs>` +
+		(pal.bar ? `<linearGradient id="${u}r" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${pal.bar[0]}"/><stop offset="1" stop-color="${pal.bar[1]}"/></linearGradient>` : "") +
+		(quiet ? `<linearGradient id="${u}rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="${pal.font === "mono" ? .12 : .3}"/><stop offset=".35" stop-color="#fff" stop-opacity=".06"/><stop offset="1" stop-color="#fff" stop-opacity=".04"/></linearGradient><clipPath id="${u}c"><rect x="3" y="3" width="138" height="138" rx="20"/></clipPath><linearGradient id="${u}s"><stop stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".10"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>` : "") + `</defs>` +
 		`<rect width="144" height="144" fill="url(#${u}b)"/><rect width="144" height="144" fill="url(#${u}g)"/>`;
 	if (style === "vivid") body += `<circle cx="128" cy="12" r="50" fill="#fff" opacity=".10"/><circle cx="10" cy="140" r="44" fill="#000" opacity=".10"/>`;
-	body += `<rect x="1.5" y="1.5" width="141" height="141" rx="14" fill="none" stroke="${pal.edge}" stroke-width="2"/>`;
-	if (pal.bar) body += `<rect width="144" height="6" fill="url(#${u}r)"/>`;
-	// Travelling sheen on the frame for the colour looks.
-	if (animate) body += `<rect x="2.5" y="2.5" width="139" height="139" rx="13" fill="none" stroke="${style === "app" || style === "light" ? pal.clay : "#fff"}" stroke-width="2.4" stroke-opacity="${style === "app" || style === "light" ? 0.85 : 0.5}" stroke-linecap="round" stroke-dasharray="46 510" stroke-dashoffset="${f(-p * 556)}"/>`;
-	const bob = animate ? -4 * Math.sin(p2 * TAU) : 0, grow = animate ? 1 + 0.05 * wave(p2) : 1;
-	body += `<g data-glyph="${esc(glyph)}" transform="translate(72 ${f(56 + bob)}) scale(${f(grow)}) translate(-72 -56)">${draw(p2)}</g>`;
+	if (quiet) {
+		if (pal.font === "glass") body += `<ellipse cx="72" cy="-4" rx="96" ry="50" fill="#fff" opacity=".045"/>`;
+		body += `<rect x="6.5" y="6.5" width="131" height="131" rx="22" fill="none" stroke="url(#${u}rim)" stroke-width="1.4"/>`;
+		if (pal.font === "mono") {
+			const k = tileMoves ? wave(p) : 0.6;
+			body += `<circle cx="118" cy="26" r="${f(4 + k * 1.2)}" fill="${pal.accent}" opacity="${f(0.55 + 0.45 * k)}"/>` + (tileMoves ? `<circle cx="118" cy="26" r="${f(5 + k * 7)}" fill="none" stroke="${pal.accent}" stroke-width="1" opacity="${f(0.45 * (1 - k))}"/>` : "");
+		} else if (tileMoves) {
+			if (p < 0.28) body += `<g clip-path="url(#${u}c)"><rect x="${f(-90 + (p / 0.28) * 330)}" y="-40" width="42" height="150" transform="rotate(28 72 72)" fill="url(#${u}s)"/></g>`;
+			body += `<rect x="6.5" y="6.5" width="131" height="131" rx="22" fill="none" stroke="${pal.accent}" stroke-width="1.6" stroke-linecap="round" stroke-opacity="${f(0.35 + wave(p) * 0.3)}" stroke-dasharray="26 470" stroke-dashoffset="${f(-p * 496)}"/>`;
+		}
+	} else {
+		body += `<rect x="1.5" y="1.5" width="141" height="141" rx="14" fill="none" stroke="${pal.edge}" stroke-width="2"/>`;
+		if (pal.bar) body += `<rect width="144" height="6" fill="url(#${u}r)"/>`;
+		// Travelling sheen on the frame for the colour looks.
+		if (tileMoves) body += `<rect x="2.5" y="2.5" width="139" height="139" rx="13" fill="none" stroke="${style === "app" || style === "light" ? pal.clay : "#fff"}" stroke-width="2.4" stroke-opacity="${style === "app" || style === "light" ? 0.85 : 0.5}" stroke-linecap="round" stroke-dasharray="46 510" stroke-dashoffset="${f(-p * 556)}"/>`;
+	}
+	const bob = iconMoves ? (quiet ? -1.6 : -4) * Math.sin(p2 * TAU) : 0, grow = iconMoves ? 1 + (quiet ? 0.02 : 0.05) * wave(p2) : 1;
+	const base = quiet ? 0.86 : 1;
+	body += `<g data-glyph="${esc(glyph)}" transform="translate(72 ${f((quiet ? 54 : 56) + bob)}) scale(${f(grow * base)}) translate(-72 -56)">${draw(iconMoves ? p2 : 0)}</g>`;
 	if (setup) body += `<rect x="46" y="92" width="52" height="15" rx="7.5" fill="${pal.clay}"/><text x="72" y="103" text-anchor="middle" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" letter-spacing="1" fill="${pal.cut}">SETUP</text>`;
-	if (text) body += (serif ? `<path d="M${f(72 - (10 + 12 * (animate ? wave(p2) : 0.5)))} 110h${f(2 * (10 + 12 * (animate ? wave(p2) : 0.5)))}" stroke="${pal.clay}" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>` +
+	if (text && quiet) body += (pal.font === "glass" ? `<path d="M65 108h14" stroke="${pal.accent}" stroke-width="2.2" stroke-linecap="round" opacity=".85"/>` : "") +
+		`<text x="72" y="127" text-anchor="middle" font-family="Segoe UI Variable Display, ${LABEL_FONT}" font-size="${fs}" font-weight="600" letter-spacing="${caseMode === "upper" ? 1.2 : 0.4}" fill="${pal.font === "mono" ? "#B9C0CC" : "#ECEFF5"}">${text}</text>`;
+	else if (text) body += (serif ? `<path d="M${f(72 - (10 + 12 * (tileMoves ? wave(p2) : 0.5)))} 110h${f(2 * (10 + 12 * (tileMoves ? wave(p2) : 0.5)))}" stroke="${pal.clay}" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>` +
 		`<text x="72" y="132" text-anchor="middle" font-family="${LABEL_FONT}" font-size="${fs}" font-weight="800" fill="${pal.ink}" stroke="${pal.ink}" stroke-width=".55" stroke-linejoin="round">${text}</text>` :
-		`<text x="72" y="132.5" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="${fs}" font-weight="800" letter-spacing="${raw.length > 9 ? 0.3 : 1}" fill="#000" opacity=".35">${text}</text>` +
-		`<text x="72" y="131" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="${fs}" font-weight="800" letter-spacing="${raw.length > 9 ? 0.3 : 1}" fill="${style === "neon" ? "#ffffff" : pal.ink}" stroke="${style === "neon" ? "#ffffff" : pal.ink}" stroke-width=".5" stroke-linejoin="round">${text}</text>`);
+		`<text x="72" y="132.5" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="${fs}" font-weight="800" letter-spacing="${shown.length > 9 ? 0.3 : 1}" fill="#000" opacity=".35">${text}</text>` +
+		`<text x="72" y="131" text-anchor="middle" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="${fs}" font-weight="800" letter-spacing="${shown.length > 9 ? 0.3 : 1}" fill="${style === "neon" ? "#ffffff" : pal.ink}" stroke="${style === "neon" ? "#ffffff" : pal.ink}" stroke-width=".5" stroke-linejoin="round">${text}</text>`);
+	if (press > 0 && press < 1) {
+		const e = 1 - Math.pow(1 - press, 3), fade = 1 - press;
+		body += `<rect width="144" height="144" rx="${quiet ? 22 : 14}" fill="#fff" opacity="${f(0.16 * fade)}"/><circle cx="72" cy="58" r="${f(18 + e * 70)}" fill="none" stroke="${pal.accent || pal.clay}" stroke-width="${f(6 * fade + 1)}" opacity="${f(0.75 * fade)}"/>`;
+	}
 	Object.assign(T, CLAUDE_TOKENS);
 	return `<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144"><g data-app-design="${esc(brand)}" data-style="${style}">${body}</g></svg>`;
 }
@@ -603,13 +720,15 @@ export function meterKeySvg({ brand = "claude", style = "app", colours, pct, cap
 	const col = !ok ? pal.muted : v >= 85 ? "#FF4D5E" : v >= 60 ? "#F5A524" : pal.clay;
 	const R = 38, C = 2 * Math.PI * R, cx = 72, cy = 56;
 	const msg = { setup: "SETUP", signin: "SIGN IN", blocked: "BLOCKED", nodata: "NO DATA", error: "ERROR", loading: "…" }[state] || "";
-	const text = esc(String(label).slice(0, 14));
-	const fs = text.length > 11 ? 16.5 : text.length > 8 ? 18.5 : 21;
+	let raw = String(label).trim(); if (raw.length > 18) raw = raw.slice(0, 17).trimEnd() + "…";
+	const text = esc(raw);
+	const fs = Math.max(11, Math.min(21, Math.floor((128 / Math.max(1, raw.length * 0.6)) * 2) / 2));
+	const quiet = pal.font === "glass" || pal.font === "mono";
 	const glow = animate ? 0.12 + 0.2 * wave(p2) : 0.12;
 	let body = `<defs><linearGradient id="${u}b" x1="0" y1="0" x2="${style === "vivid" ? 1 : 0}" y2="1"><stop offset="0" stop-color="${pal.bgTop}"/><stop offset="1" stop-color="${pal.bgBottom}"/></linearGradient>` +
 		`<radialGradient id="${u}g" cx=".5" cy=".4" r=".55"><stop offset="0" stop-color="${col}" stop-opacity="${f(glow)}"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></radialGradient></defs>` +
 		`<rect width="144" height="144" fill="url(#${u}b)"/><rect width="144" height="144" fill="url(#${u}g)"/>` +
-		`<rect x="1.5" y="1.5" width="141" height="141" rx="14" fill="none" stroke="${pal.edge}" stroke-width="2"/>`;
+		(quiet ? `<rect x="6.5" y="6.5" width="131" height="131" rx="22" fill="none" stroke="#fff" stroke-opacity="${pal.font === "mono" ? .1 : .16}" stroke-width="1.4"/>` : `<rect x="1.5" y="1.5" width="141" height="141" rx="14" fill="none" stroke="${pal.edge}" stroke-width="2"/>`);
 	if (pal.bar) body += `<rect width="144" height="6" fill="${pal.bar[0]}"/>`;
 	body += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${pal.faint}" stroke-width="9"/>`;
 	if (ok && v > 0) body += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${col}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${f(C * v / 100)} ${f(C)}" transform="rotate(-90 ${cx} ${cy})"/>`;

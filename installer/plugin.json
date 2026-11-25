@@ -4,7 +4,7 @@
   "PluginId": "com.windowstoolkit.vscode",
   "PluginFolder": "vscode",
   "Profile": "profiles/VS Code",
-  "Version": "3.0.0.0",
+  "Version": "3.1.0.0",
   "Repository": "nikhilgs817/streamdeck_vscode",
   "Toolkit": {
     "Version": "3.0.0.0",

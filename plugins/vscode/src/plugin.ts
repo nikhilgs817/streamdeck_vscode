@@ -1,6 +1,6 @@
 import streamDeck from "@elgato/streamdeck";
 import type { JsonObject, JsonValue } from "@elgato/utils";
-import { REGISTRY, globals } from "../../../shared/base.js";
+import { REGISTRY, globals, setDefaultStyle, setGlobals, repaintEverything, watchWindowsMotion } from "../../../shared/base.js";
 import { ps } from "../../../shared/ps.js";
 import { initDeck } from "./deck.js";
 import { ALL_KEYS } from "./keys.js";
@@ -8,7 +8,9 @@ import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { PRESET_ICONS, setAppDesign } from "../../../shared/icons.js";
 
 setAppDesign(JSON.parse(readFileSync(new URL('../app-design.json',import.meta.url),'utf8')));
-for(const [kind,preset] of Object.entries(PRESET_ICONS))if(kind.startsWith('vsc-'))preset.style='app';
+// VS Code keys use the quiet Glass look by default; the VS Code theme and every other look stay one click away.
+setDefaultStyle("glass");
+for(const [kind,preset] of Object.entries(PRESET_ICONS))if(kind.startsWith('vsc-'))preset.style='glass';
 
 streamDeck.logger.setLevel("info");
 const log = streamDeck.logger.createScope("plugin");
@@ -42,7 +44,8 @@ streamDeck.ui.onSendToPlugin<{ event?: string; settings?: JsonObject; order?: st
 
 ps.start();
 void ps.run("warm", [], 60_000).then((r) => log.info(`warm-up: ${r.status} ${r.message}`));
-streamDeck.settings.onDidReceiveGlobalSettings((ev) => Object.assign(globals, ev.settings));
+streamDeck.settings.onDidReceiveGlobalSettings((ev) => { setGlobals(ev.settings); void repaintEverything(); });
+watchWindowsMotion();
 initDeck();
 
 await streamDeck.connect();

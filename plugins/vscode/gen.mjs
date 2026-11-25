@@ -8,7 +8,7 @@ import { buildProfile, copyUi, writeActionImages, writePluginIcons, writer } fro
 const here = dirname(fileURLToPath(import.meta.url));
 const UUID = "com.windowstoolkit.vscode";
 const NAME = "VS Code Controls";
-const VERSION = "3.0.0.0";
+const VERSION = "3.1.0.0";
 const sd = join(here, `${UUID}.sdPlugin`);
 const PROFILE = "profiles/VS Code"; // must match deck.ts PROFILE
 const DESIGN=JSON.parse(readFileSync(join(here,'../../app-design.json'),'utf8'));

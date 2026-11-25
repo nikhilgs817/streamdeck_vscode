@@ -11,7 +11,7 @@
     "Url": "https://github.com/nikhilgs817/windows_toolkit/releases/download/v3.0.0/WindowsToolkit-Installer-3.0.0.0.zip",
     "Sha256": "31506048f13823fdbff39b69dbfb66cb63952bb1a5ffb8c73b477a319b1df0b5"
   },
-  "PackageSha256": "121233266911163bf0804e6a850ecf4c9cdebb644886d24716a047c42e50a418",
+  "PackageSha256": "ff2980314d825151d35c5956e68cad8a3a20f8be6c282fc422766427f1311e45",
   "RetiredPluginIds": [
     "com.dailyops.vscode.v2"
   ]
